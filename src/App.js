@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import DeckGL, { OrbitView, OrthographicView } from "deck.gl";
 
 //import renderLayers from "./LineLayers";
-import renderLayers from "./boundingBoxLayer";
-const resolution = 10;
+import bboxLayer from "./boundingBoxLayer";
 
 export default () => {
   const width = 900;
@@ -41,13 +40,13 @@ export default () => {
           views={v2d ? views2d : views3d}
           initialViewState={viewport}
           controller={true}
-          layers={renderLayers({
-            //grid: grid,
-            //resolution: resolution,
-            min: bbox[0],
-            max: bbox[1],
-            viewport: viewport
-          })}
+          layers={[
+            bboxLayer({
+              min: bbox[0],
+              max: bbox[1],
+              viewport: viewport
+            })
+          ]}
         />
       </div>
       <div id="ui">

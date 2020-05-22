@@ -18,7 +18,7 @@ export default props => {
 
   const data = convertToLines(min, max);
 
-  const lineLayer = new LineLayer({
+  return new LineLayer({
     id: "bbox-layer",
     coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
     data: data,
@@ -28,8 +28,4 @@ export default props => {
     getColor: () => [255, 0, 0],
     getWidth: 3
   });
-
-  const layers = [lineLayer];
-
-  return layers;
 };
