@@ -13,7 +13,13 @@ body,
 }
 #ui {
   position: absolute;
-  top: 40px;
-  left: 40px;
+  top: 5px;
+  left: 200px;
   z-index: 9;
+}
+
+.button {
+  background-color: #008cba;
+  font-size: 40px;
+  width: 200px;
 }
