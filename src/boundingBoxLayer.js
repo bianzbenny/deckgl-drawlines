@@ -21,6 +21,7 @@ export default props => {
   return new LineLayer({
     id: "bbox-layer",
     coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+    //visible:false,
     data: data,
     pickable: false,
     getSourcePosition: d => d[0],
