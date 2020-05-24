@@ -4,12 +4,18 @@ import uti from "./utils";
 
 import bboxLayer from "./boundingBoxLayer";
 import bboxLabel from "./bBoxLabelLayer";
+import geojsonLayer from "./geojsonLayer";
+//import geoData from "./data/geojsonData";
+import geoData2 from "./data/simpleData";
+//const geoData2 = geoData[0].meshLayer;
+console.log(geoData2);
 
 export default () => {
   const width = 900;
   const height = 800;
 
-  const bbox = [[5, 8], [5.125, 8.25]];
+  //const bbox = [[0, 0], [100, 100]];
+  const bbox = [[-123.5, 49], [-123, 49.5]];
   const { scale, zoomLevel, target } = uti({
     min: bbox[0],
     max: bbox[1],
@@ -18,12 +24,13 @@ export default () => {
   });
   console.log(`scale=${scale} zoom=${zoomLevel} target:${target} `);
   const [viewport] = useState({
-    target: [target[0], -target[1], 0], //world coords of view center, should be bbox center
-    position: [width / 2, height / 2, 0], //camera position
+    target: [target[0], target[1], 0], //world coords of view center, should be bbox center
+    //position: [width / 2, height / 2, 0], //camera position
+    position: [target[0], target[1], 0],
     width: width,
     height: height,
     rotationX: 0,
-    zoom: zoomLevel + 3 //should calculate according to bbox
+    zoom: zoomLevel //should calculate according to bbox
     //viewMatrix: [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
   });
   //create different views 2d, or 3d
@@ -31,7 +38,7 @@ export default () => {
   const views3d = new OrbitView({
     id: "3d-scene",
     orbitAxis: "X",
-    rotationX: 10
+    rotationX: 0
   });
   //v2d flag to show 2d or 3d view
   const [v2d, setV2d] = useState(true);
@@ -40,6 +47,7 @@ export default () => {
   };
   //create layes
   const layers = [
+    geojsonLayer({ data: geoData2 }),
     bboxLayer({
       min: bbox[0],
       max: bbox[1],
