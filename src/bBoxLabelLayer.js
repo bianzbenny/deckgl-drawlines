@@ -20,7 +20,7 @@ export default props => {
   return new TextLayer({
     id: "bbox-label",
     coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
-    modelMatrix: [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    modelMatrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
 
     data,
     pickable: true,

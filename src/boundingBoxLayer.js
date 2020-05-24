@@ -8,8 +8,8 @@ const convertToLines = (min, max) => {
     [min, [min[0], max[1]]],
     [[min[0], max[1]], max],
     [max, [max[0], min[1]]],
-    [[max[0], min[1]], min],
-    [min, max]
+    [[max[0], min[1]], min]
+    //[min, max]
   ];
 };
 
@@ -22,7 +22,7 @@ export default props => {
     id: "bbox-layer",
     coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
     //visible:false,
-    modelMatrix: [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    modelMatrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
     data: data,
     pickable: false,
     getSourcePosition: d => d[0],
