@@ -22,6 +22,7 @@ export default props => {
     id: "bbox-layer",
     coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
     //visible:false,
+    modelMatrix: [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
     data: data,
     pickable: false,
     getSourcePosition: d => d[0],

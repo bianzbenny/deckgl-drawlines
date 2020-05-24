@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import DeckGL, { OrbitView, OrthographicView } from "deck.gl";
+import uti from "./utils";
 
 import bboxLayer from "./boundingBoxLayer";
 import bboxLabel from "./bBoxLabelLayer";
@@ -8,15 +9,22 @@ export default () => {
   const width = 900;
   const height = 800;
 
-  const bbox = [[0, 0], [500, 800]];
-
+  const bbox = [[5, 8], [5.125, 8.25]];
+  const { scale, zoomLevel, target } = uti({
+    min: bbox[0],
+    max: bbox[1],
+    width,
+    height
+  });
+  console.log(`scale=${scale} zoom=${zoomLevel} target:${target} `);
   const [viewport] = useState({
-    target: [width / 2, height / 2, 0],
-    position: [width / 2, height / 2, 0],
+    target: [target[0], -target[1], 0], //world coords of view center, should be bbox center
+    position: [width / 2, height / 2, 0], //camera position
     width: width,
     height: height,
     rotationX: 0,
-    zoom: -1
+    zoom: zoomLevel + 3 //should calculate according to bbox
+    //viewMatrix: [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
   });
   //create different views 2d, or 3d
   const views2d = new OrthographicView({ id: "2d-scene" });
