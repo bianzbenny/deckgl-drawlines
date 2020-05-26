@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import DeckGL, { OrbitView, OrthographicView } from "deck.gl";
 import uti from "./utils";
+import useDimensions from "react-cool-dimensions";
 
 import bboxLayer from "./boundingBoxLayer";
 import bboxLabel from "./bBoxLabelLayer";
@@ -11,9 +12,22 @@ import geoData2 from "./data/simpleData";
 console.log(geoData2);
 
 export default () => {
-  const width = 900;
-  const height = 800;
-
+  const ref = useRef();
+  let [{ width, height }, setCanvasSize] = useState({
+    width: 900,
+    height: 800
+  });
+  useDimensions(ref, {
+    onResize: ({ width, height }) => {
+      // Triggered whenever the size of the target is changed
+      setCanvasSize({ width, height });
+      console.log(`width=${width} height=${height}`);
+    }
+  });
+  width = width < 10 ? 900 : width;
+  height = height < 10 ? 800 : height;
+  //const width = 900;
+  //const height = 800;
   //const bbox = [[0, 0], [100, 100]];
   const bbox = [[-123.5, 49], [-123, 49.5]];
   const { scale, zoomLevel, target } = uti({
@@ -22,7 +36,7 @@ export default () => {
     width,
     height
   });
-  console.log(`scale=${scale} zoom=${zoomLevel} target:${target} `);
+  //console.log(`scale=${scale} zoom=${zoomLevel} target:${target} `);
   const [viewport] = useState({
     target: [target[0], target[1], 0], //world coords of view center, should be bbox center
     //position: [width / 2, height / 2, 0], //camera position
@@ -33,6 +47,7 @@ export default () => {
     zoom: zoomLevel //should calculate according to bbox
     //viewMatrix: [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
   });
+
   //create different views 2d, or 3d
   const views2d = new OrthographicView({ id: "2d-scene" });
   const views3d = new OrbitView({
@@ -60,9 +75,11 @@ export default () => {
   ];
   return (
     <>
-      <div id="maps">
+      <div id="maps" ref={ref}>
         <DeckGL
           //views={}
+          width={width}
+          height={height}
           views={v2d ? views2d : views3d}
           initialViewState={viewport}
           controller={true}
