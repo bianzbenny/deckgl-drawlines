@@ -47,14 +47,15 @@ export default props => {
     width: width,
     height: height,
     rotationX: 0,
-    zoom: zoomLevel-1 //should calculate according to bbox
+    zoom: zoomLevel - 1 //should calculate according to bbox
     //viewMatrix: [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
   });
   //https://github.com/visgl/deck.gl/issues/2692 examples
-  const [viewState,setViewState] = useState(viewport);
+  const [viewState, setViewState] = useState(viewport);
   //setup control panel
   //v2d flag to show 2d or 3d view
   const [v2d, setV2d] = useState(true);
+  const [visible, setVisible] = useState(true);
   const deckgl = useRef();
   //side effect only run once
   useEffect(() => {
@@ -69,14 +70,26 @@ export default props => {
       });
     panel.addButton({ title: "zoomIn" }).on("click", () => {
       //may likely should get current zoom from viewState, see onViewStateChange()
-      setViewState({ ...viewState, zoom: deckgl.current.viewports[0].zoom + 0.5});
+      setViewState({
+        ...viewState,
+        zoom: deckgl.current.viewports[0].zoom + 0.5
+      });
       console.info(viewport);
     });
     panel.addButton({ title: "zoomOut" }).on("click", () => {
       //likely should get current zoom from viewState
       viewport.zoom = deckgl.current.viewports[0].zoom - 0.5;
-      setViewState({ ...viewState, zoom: deckgl.current.viewports[0].zoom - 0.5});
+      setViewState({
+        ...viewState,
+        zoom: deckgl.current.viewports[0].zoom - 0.5
+      });
     });
+    const folder = panel.addFolder({ title: "label layer" });
+    folder
+      .addInput({ visible: true }, "visible", { label: "Visible" })
+      .on("change", value => {
+        setVisible(value);
+      });
   }, []);
   //create different views 2d, or 3d
   const views2d = new OrthographicView({ id: "2d-scene" });
@@ -96,12 +109,13 @@ export default props => {
     }),
     bboxLabel({
       min: bbox[0],
-      max: bbox[1]
+      max: bbox[1],
+      visible
     })
   ];
   const onViewStateChange = ({ viewState }) => {
     console.log(viewState);
-    setViewState({viewState});
+    setViewState({ viewState });
   };
   return (
     <>
@@ -114,7 +128,7 @@ export default props => {
           views={v2d ? views2d : views3d}
           //controller rely on intialViewState
           initialViewState={viewport}
-          //to take control of viewState, use viewState but 
+          //to take control of viewState, use viewState but
           //can not use initialViewState together
           //viewState={viewState}
           controller={true}

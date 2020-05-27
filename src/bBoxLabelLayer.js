@@ -14,15 +14,17 @@ const convertToLabel = (min, max) => {
 };
 
 export default props => {
-  const { min, max } = props;
+  const { min, max, visible } = props;
 
   const data = convertToLabel(min, max);
+
   return new TextLayer({
     id: "bbox-label",
     coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
     modelMatrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
 
     data,
+    visible,
     pickable: true,
     getPosition: d => d.coordinates,
     getText: d => d.label,
