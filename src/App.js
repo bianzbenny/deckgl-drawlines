@@ -14,26 +14,6 @@ const Tweakpane = require("tweakpane");
 const panel = new Tweakpane({ title: "settings" });
 
 export default props => {
-  //setup control panel
-  //v2d flag to show 2d or 3d view
-  const [v2d, setV2d] = useState(true);
-  const deckgl = useRef();
-  //side effect only run once
-  useEffect(() => {
-    panel
-      .addInput({ v2d: 0 }, "v2d", {
-        options: { v2d: 0, v3d: 1 },
-        label: "view"
-      })
-      .on("change", value => {
-        setV2d(value === 0);
-        //console.log(`value=${value}`);
-        //deckgl.current.deck.viewState.zoom = deckgl.current.viewports[0].zoom + 1;
-        console.info(deckgl.current.viewports[0].zoom);
-        console.info(deckgl.current);
-      });
-  }, []);
-
   const ref = useRef();
 
   let [{ width, height }, setCanvasSize] = useState({
@@ -60,7 +40,7 @@ export default props => {
     height
   });
   //console.log(`scale=${scale} zoom=${zoomLevel} target:${target} `);
-  const [viewport] = useState({
+  const [viewport, setViewport] = useState({
     target: [target[0], target[1], 0], //world coords of view center, should be bbox center
     //position: [width / 2, height / 2, 0], //camera position
     position: [target[0], target[1], 0],
@@ -70,7 +50,33 @@ export default props => {
     zoom: zoomLevel //should calculate according to bbox
     //viewMatrix: [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
   });
-
+  //setup control panel
+  //v2d flag to show 2d or 3d view
+  const [v2d, setV2d] = useState(true);
+  const deckgl = useRef();
+  //side effect only run once
+  useEffect(() => {
+    panel
+      .addInput({ v2d: 0 }, "v2d", {
+        options: { v2d: 0, v3d: 1 },
+        label: "view"
+      })
+      .on("change", value => {
+        setV2d(value === 0);
+        //console.log(`value=${value}`);
+      });
+    panel.addButton({ title: "zoomIn" }).on("click", () => {
+      //may likely should get current zoom from viewState, see onViewStateChange()
+      viewport.zoom = deckgl.current.viewports[0].zoom + 0.5;
+      setViewport({ ...viewport });
+      console.info(viewport);
+    });
+    panel.addButton({ title: "zoomOut" }).on("click", () => {
+      //likely should get current zoom from viewState
+      viewport.zoom = deckgl.current.viewports[0].zoom - 0.5;
+      setViewport({ ...viewport });
+    });
+  }, []);
   //create different views 2d, or 3d
   const views2d = new OrthographicView({ id: "2d-scene" });
   const views3d = new OrbitView({
@@ -93,7 +99,7 @@ export default props => {
     })
   ];
   const onViewStateChange = ({ viewState }) => {
-    console.log(viewState);
+    //console.log(viewState);
   };
   return (
     <>
@@ -101,10 +107,11 @@ export default props => {
         <DeckGL
           //views={}
           ref={deckgl}
-          width={width}
-          height={height}
+          //width={width}
+          //height={height}
           views={v2d ? views2d : views3d}
           initialViewState={viewport}
+          //viewState={viewport}
           controller={true}
           layers={layers}
           onViewStateChange={onViewStateChange}
