@@ -40,16 +40,18 @@ export default props => {
     height
   });
   //console.log(`scale=${scale} zoom=${zoomLevel} target:${target} `);
-  const [viewport, setViewport] = useState({
+  const [viewport] = useState({
     target: [target[0], target[1], 0], //world coords of view center, should be bbox center
     //position: [width / 2, height / 2, 0], //camera position
     position: [target[0], target[1], 0],
     width: width,
     height: height,
     rotationX: 0,
-    zoom: zoomLevel //should calculate according to bbox
+    zoom: zoomLevel-1 //should calculate according to bbox
     //viewMatrix: [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
   });
+  //https://github.com/visgl/deck.gl/issues/2692 examples
+  const [viewState,setViewState] = useState(viewport);
   //setup control panel
   //v2d flag to show 2d or 3d view
   const [v2d, setV2d] = useState(true);
@@ -67,14 +69,13 @@ export default props => {
       });
     panel.addButton({ title: "zoomIn" }).on("click", () => {
       //may likely should get current zoom from viewState, see onViewStateChange()
-      viewport.zoom = deckgl.current.viewports[0].zoom + 0.5;
-      setViewport({ ...viewport });
+      setViewState({ ...viewState, zoom: deckgl.current.viewports[0].zoom + 0.5});
       console.info(viewport);
     });
     panel.addButton({ title: "zoomOut" }).on("click", () => {
       //likely should get current zoom from viewState
       viewport.zoom = deckgl.current.viewports[0].zoom - 0.5;
-      setViewport({ ...viewport });
+      setViewState({ ...viewState, zoom: deckgl.current.viewports[0].zoom - 0.5});
     });
   }, []);
   //create different views 2d, or 3d
@@ -99,7 +100,8 @@ export default props => {
     })
   ];
   const onViewStateChange = ({ viewState }) => {
-    //console.log(viewState);
+    console.log(viewState);
+    setViewState({viewState});
   };
   return (
     <>
@@ -110,8 +112,11 @@ export default props => {
           //width={width}
           //height={height}
           views={v2d ? views2d : views3d}
+          //controller rely on intialViewState
           initialViewState={viewport}
-          //viewState={viewport}
+          //to take control of viewState, use viewState but 
+          //can not use initialViewState together
+          //viewState={viewState}
           controller={true}
           layers={layers}
           onViewStateChange={onViewStateChange}
