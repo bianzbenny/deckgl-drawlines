@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DeckGL, { OrbitView, OrthographicView } from "deck.gl";
 import uti from "./utils";
 import useDimensions from "react-cool-dimensions";
@@ -9,9 +9,26 @@ import geojsonLayer from "./geojsonLayer";
 //import geoData from "./data/geojsonData";
 import geoData2 from "./data/simpleData";
 //const geoData2 = geoData[0].meshLayer;
-console.log(geoData2);
+//console.log(geoData2);
+const Tweakpane = require("tweakpane");
+const panel = new Tweakpane({ title: "settings" });
 
-export default () => {
+export default props => {
+  //setup control panel
+  //v2d flag to show 2d or 3d view
+  const [v2d, setV2d] = useState(true);
+  useEffect(() => {
+    panel
+      .addInput({ v2d: 0 }, "v2d", {
+        options: { v2d: 0, v3d: 1 },
+        label: "view"
+      })
+      .on("change", value => {
+        setV2d(value === 0);
+        //console.log(`value=${value}`);
+      });
+  }, []);
+
   const ref = useRef();
   let [{ width, height }, setCanvasSize] = useState({
     width: 900,
@@ -21,7 +38,7 @@ export default () => {
     onResize: ({ width, height }) => {
       // Triggered whenever the size of the target is changed
       setCanvasSize({ width, height });
-      console.log(`width=${width} height=${height}`);
+      //console.log(`width=${width} height=${height}`);
     }
   });
   width = width < 10 ? 900 : width;
@@ -55,11 +72,7 @@ export default () => {
     orbitAxis: "X",
     rotationX: 0
   });
-  //v2d flag to show 2d or 3d view
-  const [v2d, setV2d] = useState(true);
-  const click2d = () => {
-    setV2d(v2d ? false : true);
-  };
+
   //create layes
   const layers = [
     geojsonLayer({ data: geoData2 }),
@@ -86,9 +99,9 @@ export default () => {
           layers={layers}
         />
       </div>
-      <div id="ui">
+      {/* <div id="ui">
         <button onClick={click2d}> {v2d ? "2D" : "3D"}</button>
-      </div>
+      </div> */}
     </>
   );
 };

@@ -7,7 +7,8 @@ body,
   padding: 0;
 }
 #maps {
-  position: relative;
+  position: absolute;
+  top: 20px;
   width: 100%;
   height: 100%;
 }
@@ -16,10 +17,4 @@ body,
   top: 5px;
   left: 200px;
   z-index: 9;
-}
-
-.button {
-  background-color: #008cba;
-  font-size: 40px;
-  width: 200px;
 }
