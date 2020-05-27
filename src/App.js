@@ -17,6 +17,8 @@ export default props => {
   //setup control panel
   //v2d flag to show 2d or 3d view
   const [v2d, setV2d] = useState(true);
+  const deckgl = useRef();
+  //side effect only run once
   useEffect(() => {
     panel
       .addInput({ v2d: 0 }, "v2d", {
@@ -26,10 +28,14 @@ export default props => {
       .on("change", value => {
         setV2d(value === 0);
         //console.log(`value=${value}`);
+        //deckgl.current.deck.viewState.zoom = deckgl.current.viewports[0].zoom + 1;
+        console.info(deckgl.current.viewports[0].zoom);
+        console.info(deckgl.current);
       });
   }, []);
 
   const ref = useRef();
+
   let [{ width, height }, setCanvasSize] = useState({
     width: 900,
     height: 800
@@ -86,22 +92,24 @@ export default props => {
       max: bbox[1]
     })
   ];
+  const onViewStateChange = ({ viewState }) => {
+    console.log(viewState);
+  };
   return (
     <>
       <div id="maps" ref={ref}>
         <DeckGL
           //views={}
+          ref={deckgl}
           width={width}
           height={height}
           views={v2d ? views2d : views3d}
           initialViewState={viewport}
           controller={true}
           layers={layers}
+          onViewStateChange={onViewStateChange}
         />
       </div>
-      {/* <div id="ui">
-        <button onClick={click2d}> {v2d ? "2D" : "3D"}</button>
-      </div> */}
     </>
   );
 };
