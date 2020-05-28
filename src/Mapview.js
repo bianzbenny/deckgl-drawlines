@@ -1,16 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import DeckGL, { OrbitView, OrthographicView } from "deck.gl";
+import DeckGL, { OrbitView, OrthographicView, FirstPersonView } from "deck.gl";
 import uti from "./utils";
 import useDimensions from "react-cool-dimensions";
 
 import bboxLayer from "./boundingBoxLayer";
 import bboxLabel from "./bBoxLabelLayer";
 import geojsonLayer from "./geojsonLayer";
-import polygonlayer from "./polygonLayer";
-import geoData from "./data/geojsonData";
+//import geoData from "./data/geojsonData";
 import geoData2 from "./data/simpleData";
-import polygonData from "./data/simpledata3";
-
 //const geoData2 = geoData[0].meshLayer;
 //console.log(geoData2);
 const Tweakpane = require("tweakpane");
@@ -47,6 +44,9 @@ export default props => {
     target: [target[0], target[1], 0], //world coords of view center, should be bbox center
     //position: [width / 2, height / 2, 0], //camera position
     position: [target[0], target[1], 0],
+    //for map view;
+    longitude:target[0],
+    latitude:target[1],
     width: width,
     height: height,
     rotationX: 0,
@@ -57,7 +57,7 @@ export default props => {
   const [viewState, setViewState] = useState({});
   //setup control panel
   //v2d flag to show 2d or 3d view
-  const [v2d, setV2d] = useState(false);
+  const [v2d, setV2d] = useState(true);
   const [visible, setVisible] = useState(true);
   const deckgl = useRef();
 
@@ -78,7 +78,7 @@ export default props => {
   //side effect only run once
   useEffect(() => {
     panel
-      .addInput({ v2d: 1 }, "v2d", {
+      .addInput({ v2d: 0 }, "v2d", {
         options: { v2d: 0, v3d: 1 },
         label: "view"
       })
@@ -100,14 +100,13 @@ export default props => {
   const views2d = new OrthographicView({ id: "2d-scene" });
   const views3d = new OrbitView({
     id: "3d-scene",
-    orbitAxis: "Z",
-    rotationX: 20
+    orbitAxis: "X",
+    rotationX: 0
   });
 
   //create layes
   const layers = [
-    //geojsonLayer({ data: geoData2 }),
-    polygonlayer({ data: geoData[0].meshLayer.features }),
+    geojsonLayer({ data: geoData2 }),
     bboxLayer({
       min: bbox[0],
       max: bbox[1],
@@ -131,7 +130,8 @@ export default props => {
           ref={deckgl}
           //width={width}
           //height={height}
-          views={v2d ? views2d : views3d}
+          //views={v2d ? views2d : views3d}
+          views={new FirstPersonView({id: 'base-map', controller: true})}
           //controller rely on intialViewState
           initialViewState={viewport}
           //to take control of viewState, use viewState but
