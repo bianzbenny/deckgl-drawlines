@@ -1,14 +1,14 @@
 import { TextLayer, COORDINATE_SYSTEM } from "deck.gl";
 const fontSize = 0;
-const convertToLabel = (min, max) => {
+const convertToLabel = (min, max, zBottom = 0, zTop = 0.1) => {
   return [
     {
-      coordinates: [min[0], min[1] - fontSize],
-      label: `(${min[0]},${min[1]})`
+      coordinates: [min[0], min[1], zBottom],
+      label: `(${min[0]},${min[1]}), ${zBottom}`
     },
     {
-      coordinates: [max[0], max[1] + fontSize],
-      label: `(${max[0]},${max[1]})`
+      coordinates: [max[0], max[1], zTop],
+      label: `(${max[0]},${max[1]},${zTop})`
     }
   ];
 };
@@ -28,7 +28,7 @@ export default props => {
     pickable: true,
     getPosition: d => d.coordinates,
     getText: d => d.label,
-    getSize: 16,
+    getSize: 12,
     getAngle: 45,
     getTextAnchor: "middle",
     getAlignmentBaseline: "center"

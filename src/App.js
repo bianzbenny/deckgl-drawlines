@@ -4,6 +4,7 @@ import uti from "./utils";
 import useDimensions from "react-cool-dimensions";
 
 import bboxLayer from "./boundingBoxLayer";
+import bboxPolyLayer from "./boundingBoxPolygonLayer";
 import bboxLabel from "./bBoxLabelLayer";
 import geojsonLayer from "./geojsonLayer";
 import polygonlayer from "./polygonLayer";
@@ -95,6 +96,11 @@ export default props => {
       .on("change", value => {
         setVisible(value);
       });
+    //panel.expanded(false);
+    //clean up seems tweekpan not provide cleanup
+    return () => {
+      panel.dispose();
+    };
   }, []);
   //create different views 2d, or 3d
   const views2d = new OrthographicView({ id: "2d-scene" });
@@ -108,7 +114,12 @@ export default props => {
   const layers = [
     //geojsonLayer({ data: geoData2 }),
     polygonlayer({ data: geoData[0].meshLayer.features }),
-    bboxLayer({
+    /* bboxLayer({
+      min: bbox[0],
+      max: bbox[1],
+      viewport: viewport
+    }), */
+    bboxPolyLayer({
       min: bbox[0],
       max: bbox[1],
       viewport: viewport
