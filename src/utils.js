@@ -5,7 +5,7 @@ export default ({ min, max, width, height }) => {
   const scaleX = width / (max[0] - min[0]);
   const scaleY = height / (max[1] - min[1]);
   const scale = Math.min(scaleX, scaleY);
-  const zoomLevel = Math.floor(Math.log2(scale));
+  const zoom = Math.floor(Math.log2(scale));
 
   const target = [
     min[0] + 0.5 * (max[0] - min[0]),
@@ -13,5 +13,5 @@ export default ({ min, max, width, height }) => {
     0
   ];
 
-  return { scale, zoomLevel, target };
+  return { scale, zoom, target };
 };

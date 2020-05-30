@@ -25,7 +25,7 @@ const panel = new Tweakpane({ title: "settings" });
 export default props => {
   const ref = useRef();
 
-  let [{ width, height }, setCanvasSize] = useState({
+  /* let [{ width, height }, setCanvasSize] = useState({
     width: 900,
     height: 800
   });
@@ -37,42 +37,77 @@ export default props => {
     }
   });
   width = width < 10 ? 900 : width;
-  height = height < 10 ? 800 : height;
-  //const width = 900;
-  //const height = 800;
+  height = height < 10 ? 800 : height; */
+  const width = 900;
+  const height = 800;
   //const bbox = [[0, 0], [100, 100]];
   //const bbox = [[-123.5, 49], [-123, 49.5]];
   //const bbox = [[178500, 45499], [181000, 45999]];
-  const bbox = boundingbox({
-    type: "Feature",
-    geometry: borderData
-  });
-
-  const { scale, zoomLevel, target } = uti({
-    min: bbox[0],
-    max: bbox[1],
-    width,
-    height
-  });
-  console.log(`scale=${scale} zoom=${zoomLevel} target:${target} `);
-  const [viewport] = useState({
-    target: [target[0], target[1], 0], //world coords of view center, should be bbox center
-    //position: [width / 2, height / 2, 0], //camera position
-    position: [target[0], target[1], 0],
+  const [viewport, setViewport] = useState({
+    //target: [target[0], target[1], 0], //world coords of view center, should be bbox center
+    //position: [target[0], target[1], 0], //camera position
     width: width,
     height: height,
     rotationX: 0,
-    zoom: zoomLevel - 1 //should calculate according to bbox
-    //viewMatrix: [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    //zoom: //should calculate according to bbox
+    
   });
-  //https://github.com/visgl/deck.gl/issues/2692 examples
-  const [viewState, setViewState] = useState({});
+  const [layers, setLayers] = useState();
+  useEffect(() => {
+    fetch('resources/border.geojson')
+    .then(response => response.json())
+    .then(data => {
+      console.log("from fetch", data);
+      const bbox = boundingbox({
+        type: "Feature",
+        geometry: data
+      });
+      console.log('bbox', bbox);
+      const { scale, zoom, target } = uti({
+        min: bbox[0],
+        max: bbox[1],
+        width,
+        height
+      });
+      console.log(`scale=${scale} zoom=${zoom} target:${target} `);
+      setViewport(viewport => ({...viewport, zoom, target, position:target}));
+      //create layes
+      setLayers( [
+        geojsonLayer({
+          data: {
+            type: "Feature",
+            geometry: data
+          }
+        }),
+        //polygonlayer({ data: geoData[0].meshLayer.features }),
+        bboxLayer({
+          min: bbox[0],
+          max: bbox[1],
+          viewport: viewport
+        }),
+        /* bboxPolyLayer({
+          min: bbox[0],
+          max: bbox[1],
+          viewport: viewport
+        }), */
+        bboxLabel({
+          min: bbox[0],
+          max: bbox[1],
+          visible
+        })
+      ]);
+    });
+  }, [])
+
+  
+  
   //setup control panel
   //v2d flag to show 2d or 3d view
   const [v2d, setV2d] = useState(false);
   const [visible, setVisible] = useState(true);
   const deckgl = useRef();
 
+  const [viewState, setViewState] = useState({});
   const onClickZoom = delta => {
     //may likely should get current zoom from viewState, see onViewStateChange()
     //viewState was remembered inside useEffect
@@ -87,6 +122,7 @@ export default props => {
     newViewState.zoom += delta;
     deckgl.current.deck.setProps({ viewState: newViewState });
   };
+
   //side effect only run once
   useEffect(() => {
     panel
@@ -121,31 +157,7 @@ export default props => {
     rotationX: 20
   });
 
-  //create layes
-  const layers = [
-    geojsonLayer({
-      data: {
-        type: "Feature",
-        geometry: borderData
-      }
-    }),
-    //polygonlayer({ data: geoData[0].meshLayer.features }),
-    bboxLayer({
-      min: bbox[0],
-      max: bbox[1],
-      viewport: viewport
-    }),
-    /* bboxPolyLayer({
-      min: bbox[0],
-      max: bbox[1],
-      viewport: viewport
-    }), */
-    bboxLabel({
-      min: bbox[0],
-      max: bbox[1],
-      visible
-    })
-  ];
+  
   const onViewStateChange = ({ viewState }) => {
     //setViewState(viewState);
     //console.log(viewState);
