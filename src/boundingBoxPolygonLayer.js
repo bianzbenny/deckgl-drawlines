@@ -34,7 +34,7 @@ export default props => {
     lineWidthUnits: "pixels",
     wireframe: true,
     getFillColor: [160, 160, 180, 50],
-    getLineColor: [255, 0, 0, 200],
+    getLineColor: [255, 0, 0, 100],
     //getRadius: 100,
     getLineWidth: 2,
     getElevation: 0.05,

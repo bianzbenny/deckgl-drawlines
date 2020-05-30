@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import DeckGL, { OrbitView, OrthographicView } from "deck.gl";
+//import visLayers from './visLayers';
+
 import uti from "./utils";
 import useDimensions from "react-cool-dimensions";
 
@@ -11,6 +13,9 @@ import polygonlayer from "./polygonLayer";
 import geoData from "./data/geojsonData";
 import geoData2 from "./data/simpleData";
 import polygonData from "./data/simpledata3";
+import borderData from "./data/borderData";
+
+import boundingbox from "./bbox";
 
 //const geoData2 = geoData[0].meshLayer;
 //console.log(geoData2);
@@ -36,14 +41,20 @@ export default props => {
   //const width = 900;
   //const height = 800;
   //const bbox = [[0, 0], [100, 100]];
-  const bbox = [[-123.5, 49], [-123, 49.5]];
+  //const bbox = [[-123.5, 49], [-123, 49.5]];
+  //const bbox = [[178500, 45499], [181000, 45999]];
+  const bbox = boundingbox({
+    type: "Feature",
+    geometry: borderData
+  });
+
   const { scale, zoomLevel, target } = uti({
     min: bbox[0],
     max: bbox[1],
     width,
     height
   });
-  //console.log(`scale=${scale} zoom=${zoomLevel} target:${target} `);
+  console.log(`scale=${scale} zoom=${zoomLevel} target:${target} `);
   const [viewport] = useState({
     target: [target[0], target[1], 0], //world coords of view center, should be bbox center
     //position: [width / 2, height / 2, 0], //camera position
@@ -112,18 +123,23 @@ export default props => {
 
   //create layes
   const layers = [
-    //geojsonLayer({ data: geoData2 }),
-    polygonlayer({ data: geoData[0].meshLayer.features }),
-    /* bboxLayer({
-      min: bbox[0],
-      max: bbox[1],
-      viewport: viewport
-    }), */
-    bboxPolyLayer({
+    geojsonLayer({
+      data: {
+        type: "Feature",
+        geometry: borderData
+      }
+    }),
+    //polygonlayer({ data: geoData[0].meshLayer.features }),
+    bboxLayer({
       min: bbox[0],
       max: bbox[1],
       viewport: viewport
     }),
+    /* bboxPolyLayer({
+      min: bbox[0],
+      max: bbox[1],
+      viewport: viewport
+    }), */
     bboxLabel({
       min: bbox[0],
       max: bbox[1],

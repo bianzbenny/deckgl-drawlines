@@ -1,10 +1,10 @@
 import { TextLayer, COORDINATE_SYSTEM } from "deck.gl";
 const fontSize = 0;
-const convertToLabel = (min, max, zBottom = 0, zTop = 0.1) => {
+const convertToLabel = (min, max, zBottom = 0, zTop = -0.1) => {
   return [
     {
       coordinates: [min[0], min[1], zBottom],
-      label: `(${min[0]},${min[1]}), ${zBottom}`
+      label: `(${min[0]},${min[1]}, ${zBottom})`
     },
     {
       coordinates: [max[0], max[1], zTop],
