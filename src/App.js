@@ -72,30 +72,37 @@ export default props => {
       console.log(`scale=${scale} zoom=${zoom} target:${target} `);
       setViewport(viewport => ({...viewport, zoom, target, position:target}));
       //create layes
-      setLayers( [
-        geojsonLayer({
-          data: {
-            type: "Feature",
-            geometry: data
-          }
-        }),
-        //polygonlayer({ data: geoData[0].meshLayer.features }),
-        bboxLayer({
-          min: bbox[0],
-          max: bbox[1],
-          viewport: viewport
-        }),
-        /* bboxPolyLayer({
-          min: bbox[0],
-          max: bbox[1],
-          viewport: viewport
-        }), */
-        bboxLabel({
-          min: bbox[0],
-          max: bbox[1],
-          visible
-        })
-      ]);
+      fetch('resources/3dmesh.geojson')
+        .then(response => response.json())
+        .then(mesh => {
+          setLayers( [
+            geojsonLayer({
+              data: {
+                type: "Feature",
+                geometry: data
+              }
+            }),
+            geojsonLayer({
+              data:mesh
+            }),
+            //polygonlayer({ data: data.meshLayer.features }),
+            bboxLayer({
+              min: bbox[0],
+              max: bbox[1],
+              viewport: viewport
+            }),
+            /* bboxPolyLayer({
+              min: bbox[0],
+              max: bbox[1],
+              viewport: viewport
+            }), */
+            bboxLabel({
+              min: bbox[0],
+              max: bbox[1],
+              visible
+            })
+          ]);
+        });
     });
   }, [])
 
