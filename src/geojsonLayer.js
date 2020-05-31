@@ -1,9 +1,9 @@
 import { GeoJsonLayer, COORDINATE_SYSTEM } from "deck.gl";
 
 export default props => {
-  const { data, filled=false, lineWidth=1 } = props;
+  const { id = "geojson-layer", data, filled=false, lineWidth=1 } = props;
   return new GeoJsonLayer({
-    id: "geojson-layer",
+    id,
     data,
     positionFormat: "XY",
     coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,

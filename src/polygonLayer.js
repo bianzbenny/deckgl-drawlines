@@ -1,9 +1,9 @@
 import {PolygonLayer, COORDINATE_SYSTEM } from "deck.gl";
 
 export default props => {
-  const { data } = props;
+  const { id="polygon-layer", data } = props;
   return new PolygonLayer({
-    id: "polygon-layer",
+    id,
     data,
     getPolygon: d => d.geometry.coordinates,
     positionFormat: "XY",

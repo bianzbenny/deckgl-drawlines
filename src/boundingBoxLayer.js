@@ -14,12 +14,12 @@ const convertToLines = (min, max) => {
 };
 
 export default props => {
-  const { min, max } = props;
+  const { id = "bbox-layer", min, max } = props;
 
   const data = convertToLines(min, max);
 
   return new LineLayer({
-    id: "bbox-layer",
+    id,
     coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
     //visible:false,
     modelMatrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],

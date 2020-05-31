@@ -25,29 +25,29 @@ const panel = new Tweakpane({ title: "settings" });
 export default props => {
   const ref = useRef();
 
-  /* let [{ width, height }, setCanvasSize] = useState({
+  let [{ width, height }, setCanvasSize] = useState({
     width: 900,
-    height: 800
+    height: 600
   });
   useDimensions(ref, {
     onResize: ({ width, height }) => {
       // Triggered whenever the size of the target is changed
       setCanvasSize({ width, height });
-      //console.log(`width=${width} height=${height}`);
+      console.log(`width=${width} height=${height}`);
     }
   });
-  width = width < 10 ? 900 : width;
-  height = height < 10 ? 800 : height; */
-  const width = 900;
-  const height = 800;
+  [width, height] = [width < 10 ? 900 : width, height = height < 10 ? 800 : height];
+
+  //const width = 900;
+  //const height = 800;
   //const bbox = [[0, 0], [100, 100]];
   //const bbox = [[-123.5, 49], [-123, 49.5]];
   //const bbox = [[178500, 45499], [181000, 45999]];
   const [viewport, setViewport] = useState({
     //target: [target[0], target[1], 0], //world coords of view center, should be bbox center
     //position: [target[0], target[1], 0], //camera position
-    width: width,
-    height: height,
+    width,
+    height,
     rotationX: 0,
     //zoom: //should calculate according to bbox
     
@@ -69,8 +69,9 @@ export default props => {
         width,
         height
       });
-      console.log(`scale=${scale} zoom=${zoom} target:${target} `);
-      setViewport(viewport => ({...viewport, zoom, target, position:target}));
+      console.log(`w=${width} h=${height} scale=${scale} zoom=${zoom} target:${target} `);
+      setViewport(viewport => ({...viewport, width, height,zoom, target, position:target}));
+      console.log(viewport);
       //create layes
       fetch('resources/3dmesh.geojson')
         .then(response => response.json())
@@ -78,6 +79,7 @@ export default props => {
           console.log('mesh number:', mesh.features.length);
           setLayers( [
             geojsonLayer({
+              id:'border',
               data: {
                 type: "Feature",
                 geometry: data
@@ -85,10 +87,11 @@ export default props => {
               filled:true,
               lineWidth:3
             }),
-            geojsonLayer({
-              data:mesh,
-              filled:false
-            }),
+            /* polygonlayer({
+              id:'mesh',
+              data:mesh.features,
+              //filled:false
+            }), */
             //polygonlayer({ data: data.meshLayer.features }),
             bboxLayer({
               min: bbox[0],
@@ -108,7 +111,7 @@ export default props => {
           ]);
         });
     });
-  }, [])
+  }, [width, height])
 
   
   
@@ -171,8 +174,8 @@ export default props => {
   const [metrics, setMetrics] = useState({
     fps:0,
     gpuMemory:0,
-    gpuTimePerFrame:0,
-    cpuTimePerFrame:0
+    //gpuTimePerFrame:0,
+    //cpuTimePerFrame:0
   });
   const onViewStateChange = ({ viewState }) => {
     //setViewState(viewState);
