@@ -1,7 +1,7 @@
 import { GeoJsonLayer, COORDINATE_SYSTEM } from "deck.gl";
 
 export default props => {
-  const { data } = props;
+  const { data, filled=false, lineWidth=1 } = props;
   return new GeoJsonLayer({
     id: "geojson-layer",
     data,
@@ -10,16 +10,16 @@ export default props => {
     modelMatrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
     pickable: false,
     stroked: true,
-    filled: true,
+    filled,
     extruded: false,
     lineWidthScale: 1,
-    lineWidthMinPixels: 2,
+    lineWidthMinPixels: 1,
     lineWidthUnits: "pixels",
     wireframe: false,
     getFillColor: [160, 160, 180, 50],
     getLineColor: [160, 160, 180, 200],
     //getRadius: 100,
-    getLineWidth: 2,
+    getLineWidth: lineWidth,
     getElevation: 0,
     onHover: ({ object, x, y }) => {
       //const tooltip = object.properties.name || object.properties.station;

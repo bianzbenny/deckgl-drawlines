@@ -57,7 +57,7 @@ export default props => {
     fetch('resources/border.geojson')
     .then(response => response.json())
     .then(data => {
-      console.log("from fetch", data);
+      //console.log("from fetch", data);
       const bbox = boundingbox({
         type: "Feature",
         geometry: data
@@ -75,15 +75,19 @@ export default props => {
       fetch('resources/3dmesh.geojson')
         .then(response => response.json())
         .then(mesh => {
+          console.log('mesh number:', mesh.features.length);
           setLayers( [
             geojsonLayer({
               data: {
                 type: "Feature",
                 geometry: data
-              }
+              },
+              filled:true,
+              lineWidth:3
             }),
             geojsonLayer({
-              data:mesh
+              data:mesh,
+              filled:false
             }),
             //polygonlayer({ data: data.meshLayer.features }),
             bboxLayer({
@@ -143,7 +147,7 @@ export default props => {
       });
     //panel.addButton({ title: "zoomIn" }).on("click", () => onClickZoom(0.5));
     //panel.addButton({ title: "zoomOut" }).on("click", () => onClickZoom(-0.5));
-
+    
     const folder = panel.addFolder({ title: "label layer" });
     folder
       .addInput({ visible: true }, "visible", { label: "Visible" })
@@ -164,13 +168,22 @@ export default props => {
     rotationX: 20
   });
 
-  
+  const [metrics, setMetrics] = useState({
+    fps:0,
+    gpuMemory:0,
+    gpuTimePerFrame:0,
+    cpuTimePerFrame:0
+  });
   const onViewStateChange = ({ viewState }) => {
     //setViewState(viewState);
     //console.log(viewState);
+    setMetrics(deckgl.current.deck.metrics);
   };
   return (
     <>
+    <div>fps:{metrics.fps.toFixed(1)}</div>
+    <div>GPU Mem:{(metrics.gpuMemory/1024/1024).toFixed(1)}M</div>
+    
       <div id="maps" ref={ref}>
         <DeckGL
           //views={}
@@ -188,6 +201,7 @@ export default props => {
           onViewStateChange={onViewStateChange}
         />
       </div>
+      
     </>
   );
 };
