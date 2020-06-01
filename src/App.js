@@ -38,12 +38,7 @@ export default props => {
   });
   [width, height] = [width < 10 ? 900 : width, height = height < 10 ? 800 : height];
 
-  //const width = 900;
-  //const height = 800;
-  //const bbox = [[0, 0], [100, 100]];
-  //const bbox = [[-123.5, 49], [-123, 49.5]];
-  //const bbox = [[178500, 45499], [181000, 45999]];
-  const [viewport, setViewport] = useState({
+   const [viewport, setViewport] = useState({
     //target: [target[0], target[1], 0], //world coords of view center, should be bbox center
     //position: [target[0], target[1], 0], //camera position
     width,
@@ -53,67 +48,92 @@ export default props => {
     
   });
   const [layers, setLayers] = useState();
+  const [bbox, setBbox] = useState([[0,0],[1,1]]);
+  //const bbox = [[0, 0], [100, 100]];
+  //const bbox = [[-123.5, 49], [-123, 49.5]];
+  //const bbox = [[178500, 45499], [181000, 45999]];
+ 
+  //run when width, height and bbox change
+  useEffect(()=>{
+    const { scale, zoom, target } = uti({
+      min: bbox[0],
+      max: bbox[1],
+      width,
+      height
+    });
+    console.log(`w=${width} h=${height} scale=${scale} zoom=${zoom} target:${target} `);
+    setViewport(viewport => ({...viewport, width, height,zoom, target, position:target}));
+    console.log(viewport);
+  },[width, height, bbox])
+  
+  const [border, setBorder] = useState();
+  const [mesh, setMesh] = useState();
+  //loading data and use border to set bbox
+  //useEffect only run once
   useEffect(() => {
     fetch('resources/border.geojson')
     .then(response => response.json())
     .then(data => {
       //console.log("from fetch", data);
-      const bbox = boundingbox({
+      setBbox(boundingbox({
         type: "Feature",
         geometry: data
+      }));
+      //console.log('bbox', bbox);
+      setBorder(data);
+    });  
+    //fetch mesh
+    fetch('resources/3dmesh.geojson')
+      .then(response => response.json())
+      .then(data => {
+        console.log('mesh number:', data.features.length);
+        setMesh(data);
       });
-      console.log('bbox', bbox);
-      const { scale, zoom, target } = uti({
+  }, []);
+  
+  //set layers 
+  useEffect(() =>{
+    if(!border || !mesh)
+      return;
+    setLayers( [
+      geojsonLayer({
+        id:'border line',
+        data: {
+          type: "Feature",
+          geometry: border
+        },
+        filled:true,
+        lineWidth:3
+      }),
+      geojsonLayer({
+        id:'mesh',
+        data: mesh,
+        filled:false,
+        lineWidth:1
+      }),
+      /* polygonlayer({
+        id:'mesh',
+        data:mesh.features,
+        //filled:false
+      }), */
+    
+      bboxLayer({
         min: bbox[0],
         max: bbox[1],
-        width,
-        height
-      });
-      console.log(`w=${width} h=${height} scale=${scale} zoom=${zoom} target:${target} `);
-      setViewport(viewport => ({...viewport, width, height,zoom, target, position:target}));
-      console.log(viewport);
-      //create layes
-      fetch('resources/3dmesh.geojson')
-        .then(response => response.json())
-        .then(mesh => {
-          console.log('mesh number:', mesh.features.length);
-          setLayers( [
-            geojsonLayer({
-              id:'border',
-              data: {
-                type: "Feature",
-                geometry: data
-              },
-              filled:true,
-              lineWidth:3
-            }),
-            /* polygonlayer({
-              id:'mesh',
-              data:mesh.features,
-              //filled:false
-            }), */
-            //polygonlayer({ data: data.meshLayer.features }),
-            bboxLayer({
-              min: bbox[0],
-              max: bbox[1],
-              viewport: viewport
-            }),
-            /* bboxPolyLayer({
-              min: bbox[0],
-              max: bbox[1],
-              viewport: viewport
-            }), */
-            bboxLabel({
-              min: bbox[0],
-              max: bbox[1],
-              visible
-            })
-          ]);
-        });
-    });
-  }, [width, height])
-
-  
+        viewport: viewport
+      }),
+      /* bboxPolyLayer({
+        min: bbox[0],
+        max: bbox[1],
+        viewport: viewport
+      }), */
+      bboxLabel({
+        min: bbox[0],
+        max: bbox[1],
+        visible
+      })
+    ]);
+  }, [border, mesh, bbox])
   
   //setup control panel
   //v2d flag to show 2d or 3d view
@@ -170,22 +190,20 @@ export default props => {
     orbitAxis: "Z",
     rotationX: 20
   });
-
-  const [metrics, setMetrics] = useState({
-    fps:0,
-    gpuMemory:0,
-    //gpuTimePerFrame:0,
-    //cpuTimePerFrame:0
-  });
+  //metrics
+  const [fps, setFPS] = useState(0);
+  const [gpuMemory, setGPUMemory] = useState(0);
   const onViewStateChange = ({ viewState }) => {
     //setViewState(viewState);
     //console.log(viewState);
-    setMetrics(deckgl.current.deck.metrics);
+    setFPS(deckgl.current.deck.metrics.fps);
+    setGPUMemory(deckgl.current.deck.metrics.gpuMemory);
+    //console.log(deckgl.current.deck.metrics);
   };
   return (
     <>
-    <div>fps:{metrics.fps.toFixed(1)}</div>
-    <div>GPU Mem:{(metrics.gpuMemory/1024/1024).toFixed(1)}M</div>
+    <div>fps:{fps.toFixed(1)}</div>
+    <div>GPU Mem:{(gpuMemory/1024/1024).toFixed(1)}M</div>
     
       <div id="maps" ref={ref}>
         <DeckGL
