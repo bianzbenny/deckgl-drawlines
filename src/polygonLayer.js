@@ -1,5 +1,5 @@
 import {PolygonLayer, COORDINATE_SYSTEM } from "deck.gl";
-//import convertCoords3d from './utils/convertCoords3d';
+import convertCoords3d from './utils/convertCoords3d';
 export default props => {
   const { 
     id="polygon-layer", 
@@ -16,8 +16,8 @@ export default props => {
   return new PolygonLayer({
     id,
     data,
-    //getPolygon: d => convertCoords3d({feature:d, elevationScale, isTop}),
-    getPolygon: d=>d.geometry.coordinates,
+    getPolygon: d => convertCoords3d({feature:d, elevationScale, isTop}),
+    //getPolygon: d=>d.geometry.coordinates,
     //positionFormat: "XY",
     coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
     modelMatrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],

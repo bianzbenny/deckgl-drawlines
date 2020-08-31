@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import DeckGL, { OrbitView, OrthographicView } from "deck.gl";
 //import visLayers from './visLayers';
 
-import uti from "./utils";
+import uti from "./utils/utils";
 import useDimensions from "react-cool-dimensions";
 
 //import bboxLayer from "./boundingBoxLayer";
@@ -145,8 +145,8 @@ export default props => {
         id:'mesh-bottom',
         data:mesh.features,
         elevationScale:30,
-        stroked:true,
-        filled:false,
+        stroked:false,
+        filled:true,
         wireframe:false,
         extruded: false,
         isTop:false,
@@ -157,8 +157,8 @@ export default props => {
         id:'mesh-top',
         data:mesh.features,
         elevationScale:30,
-        stroked:true,
-        filled:false,
+        stroked:false,
+        filled:true,
         wireframe:false,
         extruded: false,
         isTop:true,
