@@ -5,15 +5,22 @@ import DeckGL, { OrbitView, OrthographicView } from "deck.gl";
 import uti from "./utils";
 import useDimensions from "react-cool-dimensions";
 
-import bboxLayer from "./boundingBoxLayer";
+//import bboxLayer from "./boundingBoxLayer";
 import bboxPolyLayer from "./boundingBoxPolygonLayer";
 import bboxLabel from "./bBoxLabelLayer";
+//model border as polyline
 import geojsonLayer from "./geojsonLayer";
+//model top/bottom surface as polygons
 import polygonlayer from "./polygonLayer";
-import geoData from "./data/geojsonData";
-import geoData2 from "./data/simpleData";
-import polygonData from "./data/simpledata3";
-import borderData from "./data/borderData";
+//model base map image
+import baseImage from "./baseMapLayer";
+//model vertical border face as polyline
+//import borderFaceLayer from "./borderFaceLineLayer";
+
+//import geoData from "./data/geojsonData";
+//import geoData2 from "./data/simpleData";
+//import polygonData from "./data/simpledata3";
+//import borderData from "./data/borderData";
 
 import boundingbox from "./bbox";
 
@@ -68,6 +75,16 @@ export default props => {
   
   const [border, setBorder] = useState();
   const [mesh, setMesh] = useState();
+  const [meshNo, setMeshNo] = useState(0);
+  //setup control panel
+  //v2d flag to show 2d or 3d view
+  const [v2d, setV2d] = useState(false);
+  const [basemapVisible, setBaseMapVisible] = useState(false);
+  const [borderFaceVisible, setBorderFaceVisible] = useState(true);
+  const [meshTopVisible, setMeshTopVisible] = useState(true);
+  const [meshBottomVisible, setMeshBottomVisible] = useState(true);
+
+  const deckgl = useRef();
   //loading data and use border to set bbox
   //useEffect only run once
   useEffect(() => {
@@ -88,6 +105,7 @@ export default props => {
       .then(data => {
         console.log('mesh number:', data.features.length);
         setMesh(data);
+        setMeshNo(data.features.length);
       });
   }, []);
   
@@ -95,51 +113,80 @@ export default props => {
   useEffect(() =>{
     if(!border || !mesh)
       return;
-    setLayers( [
+   setLayers( [
+      baseImage({
+        id:'base-map',
+        min:bbox[0],
+        max:bbox[1],
+        visible:basemapVisible,
+      }),
+
       geojsonLayer({
         id:'border line',
         data: {
           type: "Feature",
           geometry: border
         },
-        filled:true,
+        filled:false,
         lineWidth:3
       }),
-      geojsonLayer({
-        id:'mesh',
-        data: mesh,
-        filled:false,
-        lineWidth:1
-      }),
-      /* polygonlayer({
-        id:'mesh',
+
+      /* borderFaceLayer({
+        id:'border-faces',
+        data:border,
+        vertialLinesOnly:true,
+        elevationScale:30,
+        zTop:1500,
+        zBottom:0, 
+        visible:borderFaceVisible
+      }), */
+      
+      polygonlayer({
+        id:'mesh-bottom',
         data:mesh.features,
+        elevationScale:30,
+        stroked:true,
+        filled:false,
+        wireframe:false,
+        extruded: false,
+        isTop:false,
+        visible:meshBottomVisible
         //filled:false
-      }), */
-    
-      bboxLayer({
+      }),
+      polygonlayer({
+        id:'mesh-top',
+        data:mesh.features,
+        elevationScale:30,
+        stroked:true,
+        filled:false,
+        wireframe:false,
+        extruded: false,
+        isTop:true,
+        visible:meshTopVisible
+        //filled:false
+      }),
+      /* bboxLayer({
         min: bbox[0],
         max: bbox[1],
+        viewport: viewport
+      }), */
+      bboxPolyLayer({
+        min: bbox[0],
+        max: bbox[1],
+        elevation:1400,
+        elevationScale:30,
+        wireframe:true,
         viewport: viewport
       }),
-      /* bboxPolyLayer({
-        min: bbox[0],
-        max: bbox[1],
-        viewport: viewport
-      }), */
       bboxLabel({
         min: bbox[0],
         max: bbox[1],
-        visible
+        visible:true
       })
     ]);
-  }, [border, mesh, bbox])
+  }, [border, mesh, bbox, basemapVisible, borderFaceVisible, meshTopVisible, meshBottomVisible])
   
   //setup control panel
-  //v2d flag to show 2d or 3d view
-  const [v2d, setV2d] = useState(false);
-  const [visible, setVisible] = useState(true);
-  const deckgl = useRef();
 
   const [viewState, setViewState] = useState({});
   const onClickZoom = delta => {
@@ -168,21 +215,36 @@ export default props => {
         setV2d(value === 0);
         //console.log(`value=${value}`);
       });
+    panel.addInput({ meshTopVisible: true }, "meshTopVisible", { label: "Mesh Top" })
+      .on("change", value => {
+        setMeshTopVisible(value);
+      });
+    panel.addInput({ meshBottomVisible: true }, "meshBottomVisible", { label: "Mesh Bottom" })
+      .on("change", value => {
+        setMeshBottomVisible(value);
+      });
+    panel.addInput({ borderFaceVisible: true }, "borderFaceVisible", { label: "Border Face" })
+    .on("change", value => {
+      setBorderFaceVisible(value);
+      console.log(`border face=${value}`);
+    });
+      
     //panel.addButton({ title: "zoomIn" }).on("click", () => onClickZoom(0.5));
     //panel.addButton({ title: "zoomOut" }).on("click", () => onClickZoom(-0.5));
     
-    const folder = panel.addFolder({ title: "label layer" });
+    const folder = panel.addFolder({ title: "base map" });
     folder
       .addInput({ visible: true }, "visible", { label: "Visible" })
       .on("change", value => {
-        setVisible(value);
+        setBaseMapVisible(value);
       });
-    //panel.expanded(false);
+    panel.expanded =false;
     //clean up seems tweekpan not provide cleanup
     return () => {
       panel.dispose();
     };
   }, []);
+
   //create different views 2d, or 3d
   const views2d = new OrthographicView({ id: "2d-scene" });
   const views3d = new OrbitView({
@@ -190,20 +252,25 @@ export default props => {
     orbitAxis: "Z",
     rotationX: 20
   });
+
+
   //metrics
-  const [fps, setFPS] = useState(0);
-  const [gpuMemory, setGPUMemory] = useState(0);
+  const [metrics, setMetrics] = useState({
+    fps:0,
+    gpuMemory:0}
+  )
+  
   const onViewStateChange = ({ viewState }) => {
     //setViewState(viewState);
     //console.log(viewState);
-    setFPS(deckgl.current.deck.metrics.fps);
-    setGPUMemory(deckgl.current.deck.metrics.gpuMemory);
-    //console.log(deckgl.current.deck.metrics);
+    setMetrics({...deckgl.current.deck.metrics});
+   //console.log(deckgl.current.deck.metrics);
   };
   return (
     <>
-    <div>fps:{fps.toFixed(1)}</div>
-    <div>GPU Mem:{(gpuMemory/1024/1024).toFixed(1)}M</div>
+    <div>Polygon mesh:{new Intl.NumberFormat().format(meshNo)}</div>
+    <div>fps:{metrics.fps.toFixed(1)}</div>
+    <div>GPU Mem:{(metrics.gpuMemory/1024/1024).toFixed(1)}M</div>
     
       <div id="maps" ref={ref}>
         <DeckGL
@@ -225,4 +292,4 @@ export default props => {
       
     </>
   );
-};
+}
