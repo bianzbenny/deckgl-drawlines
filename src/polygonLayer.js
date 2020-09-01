@@ -28,7 +28,7 @@ export default props => {
     lineWidthScale: 1,
     lineWidthMinPixels: 1,
     lineWidthUnits: "pixels",
-    wireframe: false,
+    wireframe,
     getFillColor: d=> d.properties.layer0.isActive === 1 ?[160, 160, 180, 250]:[0,0,0,0],
     getLineColor: d=> d.properties.layer0.isActive === 1 ?[160, 160, 180, 250]:[0,0,0,0],
     highlightColor:[255, 0, 0, 200],

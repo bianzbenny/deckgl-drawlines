@@ -15,7 +15,11 @@ const convertToPolygon = (min, max) => {
 };
 
 export default props => {
-  const { min, max, elevationScale = 1 } = props;
+  const { min, max,  
+    elevation,
+    elevationScale=1,
+    wireframe=true,
+  } = props;
 
   const data = convertToPolygon(min, max);
   return new PolygonLayer({
@@ -32,12 +36,12 @@ export default props => {
     lineWidthScale: 1,
     lineWidthMinPixels: 2,
     lineWidthUnits: "pixels",
-    wireframe: true,
+    wireframe,
     getFillColor: [160, 160, 180, 50],
     getLineColor: [255, 0, 0, 100],
     //getRadius: 100,
     getLineWidth: 2,
-    getElevation: 0.05,
+    getElevation: elevation,
     elevationScale,
     onHover: ({ object, x, y }) => {
       //const tooltip = object.properties.name || object.properties.station;

@@ -11,10 +11,10 @@ export default props => {
     visible=true
 
   } = props;
-   let borderFaces = borderToFaceLines({feature:data, vertialLinesOnly, zTop, zBottom, elevationScale});
+   let borderFacesLines = borderToFaceLines({geometry:data, vertialLinesOnly, zTop, zBottom, elevationScale});
   return new LineLayer({
     id,
-    data: borderFaces,
+    data: borderFacesLines,
     getSourcePosition: d=>d[0],
     getTargetPosition: d=>d[1],
     coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,

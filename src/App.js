@@ -15,7 +15,7 @@ import polygonlayer from "./polygonLayer";
 //model base map image
 import baseImage from "./baseMapLayer";
 //model vertical border face as polyline
-//import borderFaceLayer from "./borderFaceLineLayer";
+import borderFaceLayer from "./borderFaceLineLayer";
 
 //import geoData from "./data/geojsonData";
 //import geoData2 from "./data/simpleData";
@@ -71,7 +71,7 @@ export default props => {
     console.log(`w=${width} h=${height} scale=${scale} zoom=${zoom} target:${target} `);
     setViewport(viewport => ({...viewport, width, height,zoom, target, position:target}));
     console.log(viewport);
-  },[width, height, bbox])
+  },[width, height, bbox, viewport])
   
   const [border, setBorder] = useState();
   const [mesh, setMesh] = useState();
@@ -131,7 +131,7 @@ export default props => {
         lineWidth:3
       }),
 
-      /* borderFaceLayer({
+      borderFaceLayer({
         id:'border-faces',
         data:border,
         vertialLinesOnly:true,
@@ -139,7 +139,7 @@ export default props => {
         zTop:1500,
         zBottom:0, 
         visible:borderFaceVisible
-      }), */
+      }),
       
       polygonlayer({
         id:'mesh-bottom',
@@ -176,7 +176,6 @@ export default props => {
         elevation:1400,
         elevationScale:30,
         wireframe:true,
-        viewport: viewport
       }),
       bboxLabel({
         min: bbox[0],
@@ -186,24 +185,7 @@ export default props => {
     ]);
   }, [border, mesh, bbox, basemapVisible, borderFaceVisible, meshTopVisible, meshBottomVisible])
   
-  //setup control panel
-
-  const [viewState, setViewState] = useState({});
-  const onClickZoom = delta => {
-    //may likely should get current zoom from viewState, see onViewStateChange()
-    //viewState was remembered inside useEffect
-    console.log(deckgl.current.deck.viewState["2d-scene"]);
-    /* setViewState({
-      ...viewState,
-      zoom: viewState.zoom + 0.5
-    });
-    */
-    let newViewState = deckgl.current.deck.viewState["2d-scene"];
-    if (!newViewState) return;
-    newViewState.zoom += delta;
-    deckgl.current.deck.setProps({ viewState: newViewState });
-  };
-
+  
   //side effect only run once
   useEffect(() => {
     panel
@@ -234,7 +216,7 @@ export default props => {
     
     const folder = panel.addFolder({ title: "base map" });
     folder
-      .addInput({ visible: true }, "visible", { label: "Visible" })
+      .addInput({ visible: false }, "visible", { label: "Visible" })
       .on("change", value => {
         setBaseMapVisible(value);
       });
@@ -260,9 +242,7 @@ export default props => {
     gpuMemory:0}
   )
   
-  const onViewStateChange = ({ viewState }) => {
-    //setViewState(viewState);
-    //console.log(viewState);
+  const onViewStateChange = () => {
     setMetrics({...deckgl.current.deck.metrics});
    //console.log(deckgl.current.deck.metrics);
   };
