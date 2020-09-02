@@ -11,8 +11,9 @@ import bboxLabel from "./bBoxLabelLayer";
 //model border as polyline
 import geojsonLayer from "./geojsonLayer";
 //model top/bottom surface as polygons
-import polygonlayer from "./mesh3dLayer";
+import mesh3dlayer from "./mesh3dLayer";
 import mesh2dlayer from "./mesh2dLayer";
+import mesh3dvolumelayer from "./mesh3dVolumeLayer";
 //model base map image
 import baseImage from "./baseMapLayer";
 //model vertical border face as polyline
@@ -81,8 +82,8 @@ export default props => {
   const [meshActiveNo, setMeshActiveNo] = useState(0);
 
   //setup control panel
-  //v2d flag to show 2d or 3d view
-  const [v2d, setV2d] = useState(false);
+  //view flag to show 2d or 3d view or 3d volume
+  const [view, setView] = useState(1);
   const [zScale, setZScale] = useState(10);
   const [basemapVisible, setBaseMapVisible] = useState(false);
   const [borderFaceVisible, setBorderFaceVisible] = useState(true);
@@ -117,27 +118,41 @@ export default props => {
       });
   }, []);
   
+  const baseLayers = [
+    baseImage({
+      id:'base-map',
+      min:bbox[0],
+      max:bbox[1],
+      visible:basemapVisible,
+    }),
+    geojsonLayer({
+      id:'border line',
+      data: {
+        type: "Feature",
+        geometry: border
+      },
+      filled:false,
+      lineWidth:3
+    }),
+    bboxPolyLayer({
+      min: bbox[0],
+      max: bbox[1],
+      elevation:1400,
+      elevationScale:30,
+      wireframe:true,
+    }),
+    bboxLabel({
+      min: bbox[0],
+      max: bbox[1],
+      visible:true
+    })
+  ];
   //set layers for 2d
   useEffect(() =>{
-    if(!v2d || !border || !mesh)
+    if(view !== 0 || !border || !mesh)
       return;
    setLayers( [
-      baseImage({
-        id:'base-map',
-        min:bbox[0],
-        max:bbox[1],
-        visible:basemapVisible,
-      }),
-
-      geojsonLayer({
-        id:'border line',
-        data: {
-          type: "Feature",
-          geometry: border
-        },
-        filled:false,
-        lineWidth:3
-      }),
+      ...baseLayers,
       mesh2dlayer({
         id:'mesh2d',
         data:mesh,
@@ -145,42 +160,35 @@ export default props => {
         filled:false,
         visible:meshBottomVisible
       }),
-      bboxPolyLayer({
-        min: bbox[0],
-        max: bbox[1],
-        elevation:1400,
-        elevationScale:30,
-        wireframe:false,
-      }),
-      bboxLabel({
-        min: bbox[0],
-        max: bbox[1],
-        visible:true
-      })
     ]);
-  }, [v2d, border, mesh, bbox, basemapVisible, meshBottomVisible])
-  //set layers for 3d
+  }, [view, border, mesh, bbox, baseLayers, basemapVisible, meshBottomVisible])
+  
+  //set layers for 3d volume
   useEffect(() =>{
-    if(v2d || !border || !mesh)
+    if(view !== 2 || !border || !mesh)
       return;
    setLayers( [
-      baseImage({
-        id:'base-map',
-        min:bbox[0],
-        max:bbox[1],
-        visible:basemapVisible,
-      }),
-
-      geojsonLayer({
-        id:'border line',
-        data: {
-          type: "Feature",
-          geometry: border
-        },
-        filled:false,
-        lineWidth:3
-      }),
-
+      ...baseLayers,  
+      mesh3dvolumelayer({
+        id:'mesh-bottom',
+        data:mesh,
+        elevationScale:zScale,
+        stroked:false,
+        filled:true,
+        wireframe:false,
+        extruded:true,
+        visible:meshBottomVisible
+        //filled:false
+      })
+    ]);
+  }, [view, zScale, border, mesh, bbox, baseLayers,basemapVisible, borderFaceVisible, meshTopVisible, meshBottomVisible])
+  
+  //set layers for 3d surface
+  useEffect(() =>{
+    if(view != 1 || !border || !mesh)
+      return;
+   setLayers( [
+      
       borderFaceLayer({
         id:'border-faces',
         data:border,
@@ -190,8 +198,7 @@ export default props => {
         zBottom:0, 
         visible:borderFaceVisible
       }),
-      
-      polygonlayer({
+      mesh3dlayer({
         id:'mesh-bottom',
         data:mesh,
         elevationScale:zScale,
@@ -203,7 +210,7 @@ export default props => {
         visible:meshBottomVisible
         //filled:false
       }),
-      polygonlayer({
+      mesh3dlayer({
         id:'mesh-top',
         data:mesh,
         elevationScale:zScale,
@@ -215,39 +222,23 @@ export default props => {
         visible:meshTopVisible
         //filled:false
       }),
-      /* bboxLayer({
-        min: bbox[0],
-        max: bbox[1],
-        viewport: viewport
-      }), */
-      bboxPolyLayer({
-        min: bbox[0],
-        max: bbox[1],
-        elevation:1400,
-        elevationScale:zScale,
-        wireframe:true,
-      }),
-      bboxLabel({
-        min: bbox[0],
-        max: bbox[1],
-        visible:true
-      })
+      ...baseLayers
     ]);
-  }, [v2d, zScale, border, mesh, bbox, basemapVisible, borderFaceVisible, meshTopVisible, meshBottomVisible])
+  }, [view, zScale, border, mesh, bbox, baseLayers,basemapVisible, borderFaceVisible, meshTopVisible, meshBottomVisible])
   
   
   //side effect only run once
   useEffect(() => {
     panel
-      .addInput({ v2d: 1 }, "v2d", {
-        options: { v2d: 0, v3d: 1 },
+      .addInput({ view: 1 }, "view", {
+        options: { ['2D']: 0, ['3D Surface']: 1, ['3D Volume']:2 },
         label: "view"
       })
       .on("change", value => {
-        setV2d(value === 0);
+        setView(value);
         //console.log(`value=${value}`);
       });
-    panel.addInput({zScale:30}, "zScale", {label:'z Scale',step:10, min:10, max:100})
+    panel.addInput({zScale:30}, "zScale", {label:'z Scale',step:5, min:5, max:50})
       .on('change', value=>{
         setZScale(value);
       })
@@ -305,15 +296,14 @@ export default props => {
     <div>{`Polygon mesh total: ${new Intl.NumberFormat().format(meshNo)} 
                         active: ${new Intl.NumberFormat().format(meshActiveNo)}` }</div>
     <div>fps:{metrics.fps.toFixed(1)}</div>
-    <div>GPU Mem:{(metrics.gpuMemory/1024/1024).toFixed(1)}M</div>
-    
+    <div>GPU Mem:{(metrics.gpuMemory/1024/1024).toFixed(1)}M</div>  
       <div id="maps" ref={ref}>
         <DeckGL
           //views={}
           ref={deckgl}
           //width={width}
           //height={height}
-          views={v2d ? views2d : views3d}
+          views={view === 0 ? views2d : views3d}
           //controller rely on intialViewState
           initialViewState={viewport}
           //to take control of viewState, use viewState but

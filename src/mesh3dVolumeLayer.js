@@ -1,22 +1,24 @@
+/**
+ * extruded polygon as volume
+ */
 import {PolygonLayer, COORDINATE_SYSTEM } from "deck.gl";
 import convertCoords3d from './utils/convertCoords3d';
 export default props => {
   const { 
-    id="polygon-layer", 
+    id="mesh_volume_layer", 
     data, 
-    stroked=true, 
+    stroked, 
     filled=true,
     extruded=true,
-    wireframe = true,
+    wireframe,
     elevationScale=1,
-    isTop=true, 
     visible=true
 
   } = props;
    return new PolygonLayer({
     id,
     data,
-    getPolygon: d => convertCoords3d({feature:d, elevationScale, isTop}),
+    getPolygon: d => convertCoords3d({feature:d, elevationScale, isTop:false}),
     coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
     modelMatrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
     pickable: false,
