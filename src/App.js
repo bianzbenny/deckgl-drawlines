@@ -11,7 +11,8 @@ import bboxLabel from "./bBoxLabelLayer";
 //model border as polyline
 import geojsonLayer from "./geojsonLayer";
 //model top/bottom surface as polygons
-import polygonlayer from "./polygonLayer";
+import polygonlayer from "./mesh3dLayer";
+import mesh2dlayer from "./mesh2dLayer";
 //model base map image
 import baseImage from "./baseMapLayer";
 //model vertical border face as polyline
@@ -136,16 +137,11 @@ export default props => {
         filled:false,
         lineWidth:3
       }),
-      polygonlayer({
-        id:'mesh-bottom',
+      mesh2dlayer({
+        id:'mesh2d',
         data:mesh,
-        v2d:true,
-        elevationScale:30,
         stroked:true,
         filled:false,
-        wireframe:false,
-        extruded: false,
-        isTop:false,
         visible:meshBottomVisible
       }),
       bboxPolyLayer({
@@ -254,7 +250,7 @@ export default props => {
       .on("change", value => {
         setMeshTopVisible(value);
       });
-    panel.addInput({ meshBottomVisible: true }, "meshBottomVisible", { label: "Mesh Bottom" })
+    panel.addInput({ meshBottomVisible: true }, "meshBottomVisible", { label: "Mesh Bottom/2D" })
       .on("change", value => {
         setMeshBottomVisible(value);
       });
