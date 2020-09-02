@@ -4,6 +4,7 @@ export default props => {
   const { 
     id="polygon-layer", 
     data, 
+    v2d,
     stroked=true, 
     filled=true,
     extruded=true,
@@ -13,9 +14,11 @@ export default props => {
     visible=true
 
   } = props;
-  return new PolygonLayer({
+   console.log(`v2d in polygon layer: ${v2d}`);
+   return new PolygonLayer({
     id,
     data,
+    //getPolygon: d => {return v2d?(d.geometry.coordinates):convertCoords3d({feature:d, elevationScale, isTop})},
     getPolygon: d => convertCoords3d({feature:d, elevationScale, isTop}),
     //getPolygon: d=>d.geometry.coordinates,
     //positionFormat: "XY",
@@ -29,8 +32,9 @@ export default props => {
     lineWidthMinPixels: 1,
     lineWidthUnits: "pixels",
     wireframe,
-    getFillColor: d=> d.properties.layer0.isActive === 1 ?[160, 160, 180, 250]:[0,0,0,0],
-    getLineColor: d=> d.properties.layer0.isActive === 1 ?[160, 160, 180, 250]:[0,0,0,0],
+    getFillColor: [160, 160, 180, 250],
+    //getFillColor: d=> d.properties.layer0.isActive === 1 ?[160, 160, 180, 250]:[0,0,0,0],
+    getLineColor: [160, 160, 180, 250],
     highlightColor:[255, 0, 0, 200],
     //getRadius: 100,
     getLineWidth: 1,

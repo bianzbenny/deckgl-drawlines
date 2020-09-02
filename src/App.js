@@ -16,6 +16,7 @@ import polygonlayer from "./polygonLayer";
 import baseImage from "./baseMapLayer";
 //model vertical border face as polyline
 import borderFaceLayer from "./borderFaceLineLayer";
+import activeMeshCells from './utils/activeCellOnly';
 
 //import geoData from "./data/geojsonData";
 //import geoData2 from "./data/simpleData";
@@ -68,14 +69,16 @@ export default props => {
       width,
       height
     });
-    console.log(`w=${width} h=${height} scale=${scale} zoom=${zoom} target:${target} `);
+    //console.log(`w=${width} h=${height} scale=${scale} zoom=${zoom} target:${target} `);
     setViewport(viewport => ({...viewport, width, height,zoom, target, position:target}));
     console.log(viewport);
-  },[width, height, bbox, viewport])
+  },[width, height, bbox])
   
   const [border, setBorder] = useState();
   const [mesh, setMesh] = useState();
   const [meshNo, setMeshNo] = useState(0);
+  const [meshActiveNo, setMeshActiveNo] = useState(0);
+
   //setup control panel
   //v2d flag to show 2d or 3d view
   const [v2d, setV2d] = useState(false);
@@ -104,14 +107,64 @@ export default props => {
       .then(response => response.json())
       .then(data => {
         console.log('mesh number:', data.features.length);
-        setMesh(data);
         setMeshNo(data.features.length);
+        let activeFeatures = activeMeshCells(data.features);
+        setMeshActiveNo(activeFeatures.length);
+        setMesh(activeFeatures);
+        
       });
   }, []);
   
-  //set layers 
+  //set layers for 2d
   useEffect(() =>{
-    if(!border || !mesh)
+    if(!v2d || !border || !mesh)
+      return;
+   setLayers( [
+      baseImage({
+        id:'base-map',
+        min:bbox[0],
+        max:bbox[1],
+        visible:basemapVisible,
+      }),
+
+      geojsonLayer({
+        id:'border line',
+        data: {
+          type: "Feature",
+          geometry: border
+        },
+        filled:false,
+        lineWidth:3
+      }),
+      polygonlayer({
+        id:'mesh-bottom',
+        data:mesh,
+        v2d:true,
+        elevationScale:30,
+        stroked:true,
+        filled:false,
+        wireframe:false,
+        extruded: false,
+        isTop:false,
+        visible:meshBottomVisible
+      }),
+      bboxPolyLayer({
+        min: bbox[0],
+        max: bbox[1],
+        elevation:1400,
+        elevationScale:30,
+        wireframe:false,
+      }),
+      bboxLabel({
+        min: bbox[0],
+        max: bbox[1],
+        visible:true
+      })
+    ]);
+  }, [v2d, border, mesh, bbox, basemapVisible, meshBottomVisible])
+  //set layers for 3d
+  useEffect(() =>{
+    if(v2d || !border || !mesh)
       return;
    setLayers( [
       baseImage({
@@ -143,7 +196,7 @@ export default props => {
       
       polygonlayer({
         id:'mesh-bottom',
-        data:mesh.features,
+        data:mesh,
         elevationScale:30,
         stroked:false,
         filled:true,
@@ -155,7 +208,7 @@ export default props => {
       }),
       polygonlayer({
         id:'mesh-top',
-        data:mesh.features,
+        data:mesh,
         elevationScale:30,
         stroked:false,
         filled:true,
@@ -183,7 +236,7 @@ export default props => {
         visible:true
       })
     ]);
-  }, [border, mesh, bbox, basemapVisible, borderFaceVisible, meshTopVisible, meshBottomVisible])
+  }, [v2d, border, mesh, bbox, basemapVisible, borderFaceVisible, meshTopVisible, meshBottomVisible])
   
   
   //side effect only run once
@@ -248,7 +301,8 @@ export default props => {
   };
   return (
     <>
-    <div>Polygon mesh:{new Intl.NumberFormat().format(meshNo)}</div>
+    <div>{`Polygon mesh total: ${new Intl.NumberFormat().format(meshNo)} 
+                        active: ${new Intl.NumberFormat().format(meshActiveNo)}` }</div>
     <div>fps:{metrics.fps.toFixed(1)}</div>
     <div>GPU Mem:{(metrics.gpuMemory/1024/1024).toFixed(1)}M</div>
     
