@@ -4,24 +4,20 @@ export default props => {
   const { 
     id="polygon-layer", 
     data, 
-    v2d,
     stroked=true, 
     filled=true,
     extruded=true,
     wireframe = true,
     elevationScale=1,
+    zScale,
     isTop=true, 
     visible=true
 
   } = props;
-   console.log(`v2d in polygon layer: ${v2d}`);
    return new PolygonLayer({
     id,
     data,
-    //getPolygon: d => {return v2d?(d.geometry.coordinates):convertCoords3d({feature:d, elevationScale, isTop})},
     getPolygon: d => convertCoords3d({feature:d, elevationScale, isTop}),
-    //getPolygon: d=>d.geometry.coordinates,
-    //positionFormat: "XY",
     coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
     modelMatrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
     pickable: false,
@@ -40,6 +36,9 @@ export default props => {
     getLineWidth: 1,
     getElevation: d=>d.properties.layer0.top,
     elevationScale,
+    //need to add elevationScale to trigger polygon re-calculation
+    updateTriggers: {
+      getPolygon: [elevationScale]},
     onHover: ({ object, x, y }) => {
       //const tooltip = object.properties.name || object.properties.station;
       /* Update tooltip

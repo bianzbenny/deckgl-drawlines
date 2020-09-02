@@ -83,6 +83,7 @@ export default props => {
   //setup control panel
   //v2d flag to show 2d or 3d view
   const [v2d, setV2d] = useState(false);
+  const [zScale, setZScale] = useState(10);
   const [basemapVisible, setBaseMapVisible] = useState(false);
   const [borderFaceVisible, setBorderFaceVisible] = useState(true);
   const [meshTopVisible, setMeshTopVisible] = useState(true);
@@ -184,7 +185,7 @@ export default props => {
         id:'border-faces',
         data:border,
         vertialLinesOnly:true,
-        elevationScale:30,
+        elevationScale:zScale,
         zTop:1500,
         zBottom:0, 
         visible:borderFaceVisible
@@ -193,7 +194,7 @@ export default props => {
       polygonlayer({
         id:'mesh-bottom',
         data:mesh,
-        elevationScale:30,
+        elevationScale:zScale,
         stroked:false,
         filled:true,
         wireframe:false,
@@ -205,7 +206,7 @@ export default props => {
       polygonlayer({
         id:'mesh-top',
         data:mesh,
-        elevationScale:30,
+        elevationScale:zScale,
         stroked:false,
         filled:true,
         wireframe:false,
@@ -223,7 +224,7 @@ export default props => {
         min: bbox[0],
         max: bbox[1],
         elevation:1400,
-        elevationScale:30,
+        elevationScale:zScale,
         wireframe:true,
       }),
       bboxLabel({
@@ -232,7 +233,7 @@ export default props => {
         visible:true
       })
     ]);
-  }, [v2d, border, mesh, bbox, basemapVisible, borderFaceVisible, meshTopVisible, meshBottomVisible])
+  }, [v2d, zScale, border, mesh, bbox, basemapVisible, borderFaceVisible, meshTopVisible, meshBottomVisible])
   
   
   //side effect only run once
@@ -246,6 +247,10 @@ export default props => {
         setV2d(value === 0);
         //console.log(`value=${value}`);
       });
+    panel.addInput({zScale:30}, "zScale", {label:'z Scale',step:10, min:10, max:100})
+      .on('change', value=>{
+        setZScale(value);
+      })
     panel.addInput({ meshTopVisible: true }, "meshTopVisible", { label: "Mesh Top" })
       .on("change", value => {
         setMeshTopVisible(value);
