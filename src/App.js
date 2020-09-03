@@ -58,6 +58,7 @@ export default props => {
     
   });
   const [layers, setLayers] = useState();
+  const [baseLayers, setBaseLayers] = useState();
   const [bbox, setBbox] = useState([[0,0],[1,1]]);
   //const bbox = [[0, 0], [100, 100]];
   //const bbox = [[-123.5, 49], [-123, 49.5]];
@@ -94,6 +95,7 @@ export default props => {
   //loading data and use border to set bbox
   //useEffect only run once
   useEffect(() => {
+    console.log('fetch resources');
     fetch('resources/border.geojson')
     .then(response => response.json())
     .then(data => {
@@ -117,40 +119,48 @@ export default props => {
         
       });
   }, []);
+  //set up base layers
+  useEffect(()=>{
+    if(!border)
+      return;
+    console.log('setup basic layers');
+    setBaseLayers([
+      baseImage({
+        id:'base-map',
+        min:bbox[0],
+        max:bbox[1],
+        visible:basemapVisible,
+      }),
+      geojsonLayer({
+        id:'border line',
+        data: {
+          type: "Feature",
+          geometry: border
+        },
+        filled:false,
+        lineWidth:3
+      }),
+      bboxPolyLayer({
+        min: bbox[0],
+        max: bbox[1],
+        elevation:1400,
+        elevationScale:zScale,
+        wireframe:true,
+      }),
+      bboxLabel({
+        min: bbox[0],
+        max: bbox[1],
+        visible:true
+      })
+    ])
+
+  }, [basemapVisible, bbox, border, zScale]);
   
-  const baseLayers = [
-    baseImage({
-      id:'base-map',
-      min:bbox[0],
-      max:bbox[1],
-      visible:basemapVisible,
-    }),
-    geojsonLayer({
-      id:'border line',
-      data: {
-        type: "Feature",
-        geometry: border
-      },
-      filled:false,
-      lineWidth:3
-    }),
-    bboxPolyLayer({
-      min: bbox[0],
-      max: bbox[1],
-      elevation:1400,
-      elevationScale:30,
-      wireframe:true,
-    }),
-    bboxLabel({
-      min: bbox[0],
-      max: bbox[1],
-      visible:true
-    })
-  ];
   //set layers for 2d
   useEffect(() =>{
-    if(view !== 0 || !border || !mesh)
+    if(view !== 0 || !mesh)
       return;
+    console.log('setup 2d layers');
    setLayers( [
       ...baseLayers,
       mesh2dlayer({
@@ -161,12 +171,13 @@ export default props => {
         visible:meshBottomVisible
       }),
     ]);
-  }, [view, border, mesh, bbox, baseLayers, basemapVisible, meshBottomVisible])
+  }, [view, mesh, baseLayers, meshBottomVisible])
   
   //set layers for 3d volume
   useEffect(() =>{
-    if(view !== 2 || !border || !mesh)
+    if(view !== 2 || !mesh)
       return;
+      console.log('setup 3d volume layers');
    setLayers( [
       ...baseLayers,  
       mesh3dvolumelayer({
@@ -181,12 +192,13 @@ export default props => {
         //filled:false
       })
     ]);
-  }, [view, zScale, border, mesh, bbox, baseLayers,basemapVisible, borderFaceVisible, meshTopVisible, meshBottomVisible])
+  }, [view, zScale, mesh, baseLayers, meshBottomVisible])
   
   //set layers for 3d surface
   useEffect(() =>{
-    if(view != 1 || !border || !mesh)
+    if(view !== 1 || !border || !mesh)
       return;
+      console.log('setup 3d surface layers');
    setLayers( [
       
       borderFaceLayer({
@@ -224,11 +236,12 @@ export default props => {
       }),
       ...baseLayers
     ]);
-  }, [view, zScale, border, mesh, bbox, baseLayers,basemapVisible, borderFaceVisible, meshTopVisible, meshBottomVisible])
+  }, [view, zScale, border, mesh, baseLayers, borderFaceVisible, meshTopVisible, meshBottomVisible])
   
   
   //side effect only run once
   useEffect(() => {
+    console.log('setup settings panel');
     panel
       .addInput({ view: 1 }, "view", {
         options: { ['2D']: 0, ['3D Surface']: 1, ['3D Volume']:2 },
@@ -298,6 +311,7 @@ export default props => {
     <div>fps:{metrics.fps.toFixed(1)}</div>
     <div>GPU Mem:{(metrics.gpuMemory/1024/1024).toFixed(1)}M</div>  
       <div id="maps" ref={ref}>
+      
         <DeckGL
           //views={}
           ref={deckgl}
