@@ -1,35 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import DeckGL, { OrbitView, OrthographicView } from "deck.gl";
-//import visLayers from './visLayers';
 
 import uti from "./utils/utils";
 import useDimensions from "react-cool-dimensions";
 
-//import bboxLayer from "./boundingBoxLayer";
-import bboxPolyLayer from "./boundingBoxPolygonLayer";
-import bboxLabel from "./bBoxLabelLayer";
-//model border as polyline
-import geojsonLayer from "./geojsonLayer";
-//model top/bottom surface as polygons
-import mesh3dlayer from "./mesh3dLayer";
-import mesh2dlayer from "./mesh2dLayer";
-import mesh3dvolumelayer from "./mesh3dVolumeLayer";
-//model base map image
-import baseImage from "./baseMapLayer";
-//model vertical border face as polyline
-import borderFaceLayer from "./borderFaceLineLayer";
-import activeMeshCells from './utils/activeCellOnly';
 import useFetchResource from './useFetchResource';
+import useSetBBox from './useSetBBox';
+import useSetupBaselayers from './useSetupBaselayers';
+import useLoadingMeshData from './useLoadMeshData';
+import useSetup2dviewLayers from './useSetup2dviewLayers';
+import useSetup3dvolumeLayers from './useSetup3dvolumeLayers';
+import useSetup3dsurfaceLayers from './useSetup3dsurfaceLayers';
 
-//import geoData from "./data/geojsonData";
-//import geoData2 from "./data/simpleData";
-//import polygonData from "./data/simpledata3";
-//import borderData from "./data/borderData";
-
-import boundingbox from "./bbox";
-
-//const geoData2 = geoData[0].meshLayer;
-//console.log(geoData2);
 const Tweakpane = require("tweakpane");
 const panel = new Tweakpane({ title: "settings" });
 
@@ -58,14 +40,11 @@ export default props => {
     //zoom: //should calculate according to bbox
     
   });
-  const [layers, setLayers] = useState();
-  const [baseLayers, setBaseLayers] = useState();
-  const [bbox, setBbox] = useState([[0,0],[1,1]]);
-  //const bbox = [[0, 0], [100, 100]];
-  //const bbox = [[-123.5, 49], [-123, 49.5]];
-  //const bbox = [[178500, 45499], [181000, 45999]];
- 
-  //run when width, height and bbox change
+  //loading model border (boundary) geojson and setup bbox
+  const {isLoading:isBorderLoading, data:border} = useFetchResource({url:'resources/border.geojson'});
+  const {bbox} = useSetBBox({border});
+
+  //set up viewport run when width, height and bbox change
   useEffect(()=>{
     const { scale, zoom, target } = uti({
       min: bbox[0],
@@ -78,10 +57,9 @@ export default props => {
     console.log(viewport);
   },[width, height, bbox])
   
-  //const [border, setBorder] = useState();
-  const [mesh, setMesh] = useState();
-  const [meshNo, setMeshNo] = useState(0);
-  const [meshActiveNo, setMeshActiveNo] = useState(0);
+  //loading mesh data
+  const {isMeshLoading, mesh, meshNo, meshActiveNo} = useLoadingMeshData({url:'resources/3dmesh.geojson'});
+
 
   //setup control panel
   //view flag to show 2d or 3d view or 3d volume
@@ -93,144 +71,20 @@ export default props => {
   const [meshBottomVisible, setMeshBottomVisible] = useState(true);
 
   const deckgl = useRef();
-  //loading data and use border to set bbox
-  //useEffect only run once
-  const {isLoading:isBorderLoading, data:border} = useFetchResource({url:'resources/border.geojson'});
-  const {isLoading:isMeshLoading, data:meshData} = useFetchResource({url:'resources/3dmesh.geojson'});
-  useEffect(() => {
-      if(!border)
-        return;
-      setBbox(boundingbox(border));
-    }, [border]);  
-    //fetch mesh
-  useEffect(() => {
-    if(!meshData)
-      return;
-    console.log('mesh number:', meshData.features.length);
-    setMeshNo(meshData.features.length);
-    let activeFeatures = activeMeshCells(meshData.features);
-    setMeshActiveNo(activeFeatures.length);
-    setMesh(activeFeatures);
-  }, [meshData]);
+   
   //set up base layers
-  useEffect(()=>{
-    if(!border)
-      return;
-    console.log('setup basic layers');
-    setBaseLayers([
-      baseImage({
-        id:'base-map',
-        min:bbox[0],
-        max:bbox[1],
-        visible:basemapVisible,
-      }),
-      geojsonLayer({
-        id:'border line',
-        data: {
-          type: "Feature",
-          geometry: border
-        },
-        filled:false,
-        lineWidth:3
-      }),
-      bboxPolyLayer({
-        min: bbox[0],
-        max: bbox[1],
-        elevation:1400,
-        elevationScale:zScale,
-        wireframe:true,
-      }),
-      bboxLabel({
-        min: bbox[0],
-        max: bbox[1],
-        visible:true
-      })
-    ])
+  const {baseLayers} = useSetupBaselayers({basemapVisible,bbox, border, zScale });
+  
+  const [layers, setLayers] = useState();
 
-  }, [basemapVisible, bbox, border, zScale]);
-  
-  //set layers for 2d
-  useEffect(() =>{
-    if(view !== 0 || !mesh)
-      return;
-    console.log('setup 2d layers');
-   setLayers( [
-      ...baseLayers,
-      mesh2dlayer({
-        id:'mesh2d',
-        data:mesh,
-        stroked:true,
-        filled:false,
-        visible:meshBottomVisible
-      }),
-    ]);
-  }, [view, mesh, baseLayers, meshBottomVisible])
-  
+  //2d view layers
+  useSetup2dviewLayers({view, mesh, baseLayers, meshBottomVisible, setLayers});
+
   //set layers for 3d volume
-  useEffect(() =>{
-    if(view !== 2 || !mesh)
-      return;
-      console.log('setup 3d volume layers');
-   setLayers( [
-      ...baseLayers,  
-      mesh3dvolumelayer({
-        id:'mesh-bottom',
-        data:mesh,
-        elevationScale:zScale,
-        stroked:false,
-        filled:true,
-        wireframe:false,
-        extruded:true,
-        visible:meshBottomVisible
-        //filled:false
-      })
-    ]);
-  }, [view, zScale, mesh, baseLayers, meshBottomVisible])
+  useSetup3dvolumeLayers({view, zScale, mesh, baseLayers, meshBottomVisible, setLayers});
   
   //set layers for 3d surface
-  useEffect(() =>{
-    if(view !== 1 || !border || !mesh)
-      return;
-      console.log('setup 3d surface layers');
-   setLayers( [
-      
-      borderFaceLayer({
-        id:'border-faces',
-        data:border,
-        vertialLinesOnly:true,
-        elevationScale:zScale,
-        zTop:1500,
-        zBottom:0, 
-        visible:borderFaceVisible
-      }),
-      mesh3dlayer({
-        id:'mesh-bottom',
-        data:mesh,
-        elevationScale:zScale,
-        stroked:false,
-        filled:true,
-        wireframe:false,
-        extruded: false,
-        isTop:false,
-        visible:meshBottomVisible
-        //filled:false
-      }),
-      mesh3dlayer({
-        id:'mesh-top',
-        data:mesh,
-        elevationScale:zScale,
-        stroked:false,
-        filled:true,
-        wireframe:false,
-        extruded: false,
-        isTop:true,
-        visible:meshTopVisible
-        //filled:false
-      }),
-      ...baseLayers
-    ]);
-  }, [view, zScale, border, mesh, baseLayers, borderFaceVisible, meshTopVisible, meshBottomVisible])
-  
+  useSetup3dsurfaceLayers({view, zScale, mesh, border, baseLayers, borderFaceVisible, meshTopVisible, meshBottomVisible, setLayers});
   
   //side effect only run once
   useEffect(() => {
@@ -299,6 +153,7 @@ export default props => {
   };
   return (
     <>
+    <div>{(isBorderLoading || isMeshLoading)? 'Loading data...':''}</div>
     <div>{`Polygon mesh total: ${new Intl.NumberFormat().format(meshNo)} 
                         active: ${new Intl.NumberFormat().format(meshActiveNo)}` }</div>
     <div>fps:{metrics.fps.toFixed(1)}</div>
