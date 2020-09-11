@@ -19,6 +19,7 @@ import baseImage from "./baseMapLayer";
 //model vertical border face as polyline
 import borderFaceLayer from "./borderFaceLineLayer";
 import activeMeshCells from './utils/activeCellOnly';
+import useFetchResource from './useFetchResource';
 
 //import geoData from "./data/geojsonData";
 //import geoData2 from "./data/simpleData";
@@ -77,7 +78,7 @@ export default props => {
     console.log(viewport);
   },[width, height, bbox])
   
-  const [border, setBorder] = useState();
+  //const [border, setBorder] = useState();
   const [mesh, setMesh] = useState();
   const [meshNo, setMeshNo] = useState(0);
   const [meshActiveNo, setMeshActiveNo] = useState(0);
@@ -94,31 +95,23 @@ export default props => {
   const deckgl = useRef();
   //loading data and use border to set bbox
   //useEffect only run once
+  const {isLoading:isBorderLoading, data:border} = useFetchResource({url:'resources/border.geojson'});
+  const {isLoading:isMeshLoading, data:meshData} = useFetchResource({url:'resources/3dmesh.geojson'});
   useEffect(() => {
-    console.log('fetch resources');
-    fetch('resources/border.geojson')
-    .then(response => response.json())
-    .then(data => {
-      //console.log("from fetch", data);
-      setBbox(boundingbox({
-        type: "Feature",
-        geometry: data
-      }));
-      //console.log('bbox', bbox);
-      setBorder(data);
-    });  
+      if(!border)
+        return;
+      setBbox(boundingbox(border));
+    }, [border]);  
     //fetch mesh
-    fetch('resources/3dmesh.geojson')
-      .then(response => response.json())
-      .then(data => {
-        console.log('mesh number:', data.features.length);
-        setMeshNo(data.features.length);
-        let activeFeatures = activeMeshCells(data.features);
-        setMeshActiveNo(activeFeatures.length);
-        setMesh(activeFeatures);
-        
-      });
-  }, []);
+  useEffect(() => {
+    if(!meshData)
+      return;
+    console.log('mesh number:', meshData.features.length);
+    setMeshNo(meshData.features.length);
+    let activeFeatures = activeMeshCells(meshData.features);
+    setMeshActiveNo(activeFeatures.length);
+    setMesh(activeFeatures);
+  }, [meshData]);
   //set up base layers
   useEffect(()=>{
     if(!border)
