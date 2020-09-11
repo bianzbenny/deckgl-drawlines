@@ -1,4 +1,4 @@
-import {useEffect} from 'react';
+import {useState, useEffect} from 'react';
 //model top/bottom surface as polygons
 import mesh3dlayer from "./mesh3dLayer";
 
@@ -6,12 +6,13 @@ import mesh3dlayer from "./mesh3dLayer";
 import borderFaceLayer from "./borderFaceLineLayer";
 
 export default function(props){
-   const {view, zScale, mesh, border, baseLayers, borderFaceVisible, meshTopVisible, meshBottomVisible, setLayers} = props;
+   const {view, zScale, mesh, border, borderFaceVisible, meshTopVisible, meshBottomVisible} = props;
+   const [v3dSurfaceLayers, set3dSurfaceLayers] = useState([]);
    useEffect(() =>{
       if(view !== 1 || !border || !mesh)
         return;
         console.log('setup 3d surface layers');
-     setLayers( [
+        set3dSurfaceLayers( [
         
         borderFaceLayer({
           id:'border-faces',
@@ -44,9 +45,9 @@ export default function(props){
           extruded: false,
           isTop:true,
           visible:meshTopVisible
-          //filled:false
-        }),
-        ...baseLayers
+          
+        })
       ]);
-    }, [view, zScale, border, mesh, baseLayers, borderFaceVisible, meshTopVisible, meshBottomVisible])
+    }, [view, zScale, border, mesh, borderFaceVisible, meshTopVisible, meshBottomVisible]);
+    return {v3dSurfaceLayers};
 }

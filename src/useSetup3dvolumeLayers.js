@@ -1,13 +1,13 @@
-import {useEffect} from 'react';
+import {useState, useEffect} from 'react';
 import mesh3dvolumelayer from "./mesh3dVolumeLayer";
 export default function(props){
-   const {view, zScale, mesh, baseLayers, meshBottomVisible, setLayers} = props;
+   const {view, zScale, mesh, meshBottomVisible} = props;
+   const [v3dVolumeLayers, set3dVolumeLayers] = useState([]);
    useEffect(() =>{
       if(view !== 2 || !mesh)
         return;
       console.log('setup 3d volume layers');
-      setLayers( [
-        ...baseLayers,  
+      set3dVolumeLayers( [ 
         mesh3dvolumelayer({
           id:'mesh-bottom',
           data:mesh,
@@ -20,5 +20,6 @@ export default function(props){
           //filled:false
         })
       ]);
-    }, [view, zScale, mesh, baseLayers, meshBottomVisible])
+    }, [view, zScale, mesh, meshBottomVisible]);
+    return {v3dVolumeLayers};
 }

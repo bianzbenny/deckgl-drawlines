@@ -15,6 +15,7 @@ import useSetup3dsurfaceLayers from './useSetup3dsurfaceLayers';
 const Tweakpane = require("tweakpane");
 const panel = new Tweakpane({ title: "settings" });
 
+//responsive canavs size using custom hook useDimensions
 export default props => {
   const ref = useRef();
 
@@ -72,20 +73,35 @@ export default props => {
 
   const deckgl = useRef();
    
+  const [layers, setLayers] = useState([]);
   //set up base layers
   const {baseLayers} = useSetupBaselayers({basemapVisible,bbox, border, zScale });
-  
-  const [layers, setLayers] = useState();
+
+  //set layers for 3d surface
+  const {v3dSurfaceLayers} = useSetup3dsurfaceLayers({view, zScale, mesh, border, borderFaceVisible, meshTopVisible, meshBottomVisible});
 
   //2d view layers
-  useSetup2dviewLayers({view, mesh, baseLayers, meshBottomVisible, setLayers});
+  const {v2dLayers} = useSetup2dviewLayers({view, mesh, meshBottomVisible});
 
   //set layers for 3d volume
-  useSetup3dvolumeLayers({view, zScale, mesh, baseLayers, meshBottomVisible, setLayers});
+  const {v3dVolumeLayers} = useSetup3dvolumeLayers({view, zScale, mesh, meshBottomVisible});
   
-  //set layers for 3d surface
-  useSetup3dsurfaceLayers({view, zScale, mesh, border, baseLayers, borderFaceVisible, meshTopVisible, meshBottomVisible, setLayers});
-  
+    
+  useEffect(() => {
+    switch(view){
+      case 1: //3d surface
+        setLayers([...baseLayers, ...v3dSurfaceLayers ]);
+        break;
+      case 0: //2d 
+        setLayers([...baseLayers, ...v2dLayers ]);
+        break;
+      case 2: // 3d volume
+        setLayers([...baseLayers, ...v3dVolumeLayers ]);
+        break;
+      default:
+        setLayers([]);
+    }
+  }, [view, baseLayers, v2dLayers, v3dVolumeLayers, v3dSurfaceLayers])
   //side effect only run once
   useEffect(() => {
     console.log('setup settings panel');
