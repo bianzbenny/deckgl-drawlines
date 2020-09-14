@@ -6,12 +6,16 @@ import geojsonLayer from "./geojsonLayer";
 //model base map image
 import baseImage from "./baseMapLayer";
 export default function (props) {
-   const {basemapVisible,bbox, border, zScale } = props;
+   const {basemapVisible, zScale } = props.params;
+   const {bbox, border} = props;
    const [baseLayers, setBaseLayers] = useState([]);
    //set up base layers
   useEffect(()=>{
    if(!border)
+   {
+   setBaseLayers([]);
      return;
+   }
    console.log('setup basic layers');
    setBaseLayers([
      baseImage({

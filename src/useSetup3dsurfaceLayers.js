@@ -6,11 +6,15 @@ import mesh3dlayer from "./mesh3dLayer";
 import borderFaceLayer from "./borderFaceLineLayer";
 
 export default function(props){
-   const {view, zScale, mesh, border, borderFaceVisible, meshTopVisible, meshBottomVisible} = props;
+   const {view, zScale, borderFaceVisible, meshTopVisible, meshBottomVisible} = props.params;
+   const {mesh, border} = props;
    const [v3dSurfaceLayers, set3dSurfaceLayers] = useState([]);
    useEffect(() =>{
       if(view !== 1 || !border || !mesh)
+      {
+         set3dSurfaceLayers([]);
         return;
+      }
         console.log('setup 3d surface layers');
         set3dSurfaceLayers( [
         

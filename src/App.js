@@ -12,8 +12,7 @@ import useSetup2dviewLayers from './useSetup2dviewLayers';
 import useSetup3dvolumeLayers from './useSetup3dvolumeLayers';
 import useSetup3dsurfaceLayers from './useSetup3dsurfaceLayers';
 
-const Tweakpane = require("tweakpane");
-const panel = new Tweakpane({ title: "settings" });
+import SettingsPanel from './settingsPanel';
 
 //responsive canavs size using custom hook useDimensions
 export default props => {
@@ -63,32 +62,36 @@ export default props => {
 
 
   //setup control panel
-  //view flag to show 2d or 3d view or 3d volume
-  const [view, setView] = useState(1);
-  const [zScale, setZScale] = useState(10);
-  const [basemapVisible, setBaseMapVisible] = useState(false);
-  const [borderFaceVisible, setBorderFaceVisible] = useState(true);
-  const [meshTopVisible, setMeshTopVisible] = useState(true);
-  const [meshBottomVisible, setMeshBottomVisible] = useState(true);
+  //view parameters settings
+  const defaultParams = {
+    view:1, //show 2d or 3d surface view or 3d volume
+    basemapVisible:false,
+    zScale:10,
+    borderFaceVisible:true,
+    meshTopVisible:true,
+    meshBottomVisible:true
+  }
+  const [params, setParams] = useState(defaultParams);
 
   const deckgl = useRef();
    
   const [layers, setLayers] = useState([]);
   //set up base layers
-  const {baseLayers} = useSetupBaselayers({basemapVisible,bbox, border, zScale });
+  const {baseLayers} = useSetupBaselayers({params,bbox, border});
 
   //set layers for 3d surface
-  const {v3dSurfaceLayers} = useSetup3dsurfaceLayers({view, zScale, mesh, border, borderFaceVisible, meshTopVisible, meshBottomVisible});
+  const {v3dSurfaceLayers} = useSetup3dsurfaceLayers({params, mesh, border});
 
   //2d view layers
-  const {v2dLayers} = useSetup2dviewLayers({view, mesh, meshBottomVisible});
+  const {v2dLayers} = useSetup2dviewLayers({params, mesh});
 
   //set layers for 3d volume
-  const {v3dVolumeLayers} = useSetup3dvolumeLayers({view, zScale, mesh, meshBottomVisible});
+  const {v3dVolumeLayers} = useSetup3dvolumeLayers({params, mesh});
   
-    
+  
+  
   useEffect(() => {
-    switch(view){
+    switch(params.view){
       case 1: //3d surface
         setLayers([...baseLayers, ...v3dSurfaceLayers ]);
         break;
@@ -101,53 +104,8 @@ export default props => {
       default:
         setLayers([]);
     }
-  }, [view, baseLayers, v2dLayers, v3dVolumeLayers, v3dSurfaceLayers])
-  //side effect only run once
-  useEffect(() => {
-    console.log('setup settings panel');
-    panel
-      .addInput({ view: 1 }, "view", {
-        options: { ['2D']: 0, ['3D Surface']: 1, ['3D Volume']:2 },
-        label: "view"
-      })
-      .on("change", value => {
-        setView(value);
-        //console.log(`value=${value}`);
-      });
-    panel.addInput({zScale:30}, "zScale", {label:'z Scale',step:5, min:5, max:50})
-      .on('change', value=>{
-        setZScale(value);
-      })
-    panel.addInput({ meshTopVisible: true }, "meshTopVisible", { label: "Mesh Top" })
-      .on("change", value => {
-        setMeshTopVisible(value);
-      });
-    panel.addInput({ meshBottomVisible: true }, "meshBottomVisible", { label: "Mesh Bottom/2D" })
-      .on("change", value => {
-        setMeshBottomVisible(value);
-      });
-    panel.addInput({ borderFaceVisible: true }, "borderFaceVisible", { label: "Border Face" })
-    .on("change", value => {
-      setBorderFaceVisible(value);
-      console.log(`border face=${value}`);
-    });
-      
-    //panel.addButton({ title: "zoomIn" }).on("click", () => onClickZoom(0.5));
-    //panel.addButton({ title: "zoomOut" }).on("click", () => onClickZoom(-0.5));
-    
-    const folder = panel.addFolder({ title: "base map" });
-    folder
-      .addInput({ visible: false }, "visible", { label: "Visible" })
-      .on("change", value => {
-        setBaseMapVisible(value);
-      });
-    panel.expanded =false;
-    //clean up seems tweekpan not provide cleanup
-    return () => {
-      panel.dispose();
-    };
-  }, []);
-
+  }, [params.view, baseLayers, v2dLayers, v3dVolumeLayers, v3dSurfaceLayers])
+  
   //create different views 2d, or 3d
   const views2d = new OrthographicView({ id: "2d-scene" });
   const views3d = new OrbitView({
@@ -169,11 +127,11 @@ export default props => {
   };
   return (
     <>
-    <div>{(isBorderLoading || isMeshLoading)? 'Loading data...':''}</div>
-    <div>{`Polygon mesh total: ${new Intl.NumberFormat().format(meshNo)} 
+     <div>{`Polygon mesh total: ${new Intl.NumberFormat().format(meshNo)} 
                         active: ${new Intl.NumberFormat().format(meshActiveNo)}` }</div>
     <div>fps:{metrics.fps.toFixed(1)}</div>
-    <div>GPU Mem:{(metrics.gpuMemory/1024/1024).toFixed(1)}M</div>  
+    <div>GPU Mem:{(metrics.gpuMemory/1024/1024).toFixed(1)}M</div> 
+    <div>{(isBorderLoading || isMeshLoading)? 'Loading data...':''}</div>
       <div id="maps" ref={ref}>
       
         <DeckGL
@@ -181,7 +139,7 @@ export default props => {
           ref={deckgl}
           //width={width}
           //height={height}
-          views={view === 0 ? views2d : views3d}
+          views={params.view === 0 ? views2d : views3d}
           //controller rely on intialViewState
           initialViewState={viewport}
           //to take control of viewState, use viewState but
@@ -192,7 +150,7 @@ export default props => {
           onViewStateChange={onViewStateChange}
         />
       </div>
-      
+      <SettingsPanel defaultParams = {defaultParams} setParams={setParams}/>
     </>
   );
 }
