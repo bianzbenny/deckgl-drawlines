@@ -17,7 +17,6 @@ export default (props)=>{
       panel = new Tweakpane({
          container:panelContainer.current,
          title} );
-
       panel
          .addInput({ view: defaultParams.view }, "view", {
            options: { ['2D']: 0, ['3D Surface']: 1, ['3D Volume']:2 },
@@ -26,7 +25,14 @@ export default (props)=>{
          .on("change", value => {
             setParams((preParams) => ({...preParams, view:value}));
          });
-      panel.addInput({zScale:defaultParams.zScale}, "zScale", {label:'z Scale',step:5, min:5, max:50})
+      panel
+      .addInput({ activeCellOnly: defaultParams.activeCellOnly }, "activeCellOnly", {
+         label: "Active cells only"
+      })
+      .on("change", value => {
+         setParams((preParams) => ({...preParams, activeCellOnly:value}));
+      });
+      panel.addInput({zScale:defaultParams.zScale}, "zScale", {label:'z Scale',step:5, min:5, max:30})
          .on('change', value=>{
             setParams((preParams) => ({...preParams, zScale:value}));
          })

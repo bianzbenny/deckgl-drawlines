@@ -57,14 +57,11 @@ export default props => {
     console.log(viewport);
   },[width, height, bbox])
   
-  //loading mesh data
-  const {isMeshLoading, mesh, meshNo, meshActiveNo} = useLoadingMeshData({url:'resources/3dmesh.geojson'});
-
-
   //setup control panel
   //view parameters settings
   const defaultParams = {
     view:1, //show 2d or 3d surface view or 3d volume
+    activeCellOnly:true,
     basemapVisible:false,
     zScale:10,
     borderFaceVisible:true,
@@ -72,6 +69,9 @@ export default props => {
     meshBottomVisible:true
   }
   const [params, setParams] = useState(defaultParams);
+  //loading mesh data
+  const {isMeshLoading, mesh, meshNo, meshActiveNo} = useLoadingMeshData({activeCellOnly:params.activeCellOnly, url:'resources/3dmesh.geojson'});
+
 
   const deckgl = useRef();
    
