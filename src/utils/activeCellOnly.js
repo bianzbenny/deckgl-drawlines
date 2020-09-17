@@ -13,10 +13,24 @@
 
 export default function(features){
    let activeFeatures =[];
-   for (const feature of features){
-      if(feature.properties.layer0.isActive === 1)
-      activeFeatures.push(feature);
+   //[min, max] for layer top and bottom
+   let elevationBounds = {top:[0,0], bottom:[0,0]};
+   if(features.length)
+   {
+      elevationBounds.top.fill(features[0].properties.layer0.top);
+      elevationBounds.bottom.fill(features[0].properties.layer0.bottom);
    }
-   console.log(`active features: ${activeFeatures.length}`);
-   return activeFeatures;
+   for (const feature of features){
+      if(feature.properties.layer0.isActive === 1){
+         activeFeatures.push(feature);
+         //min, max of top and bottom
+         elevationBounds.top[0] = elevationBounds.top[0] < feature.properties.layer0.top ?elevationBounds.top[0]:feature.properties.layer0.top;
+         elevationBounds.top[1] = elevationBounds.top[1] > feature.properties.layer0.top ?elevationBounds.top[1]:feature.properties.layer0.top;
+         elevationBounds.bottom[0] = elevationBounds.bottom[0] < feature.properties.layer0.bottom ?elevationBounds.bottom[0]:feature.properties.layer0.bottom;
+         elevationBounds.bottom[1] = elevationBounds.bottom[1] > feature.properties.layer0.bottom ?elevationBounds.bottom[1]:feature.properties.layer0.bottom;
+      }
+      
+   }
+   console.log(`active features: ${activeFeatures.length} elevation bounds: ${JSON.stringify(elevationBounds)}`);
+   return {activeFeatures, elevationBounds};
 }

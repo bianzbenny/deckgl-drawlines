@@ -9,14 +9,16 @@ export default function(props) {
    const [mesh, setMesh] = useState();
    const [meshNo, setMeshNo] = useState(0);
    const [meshActiveNo, setMeshActiveNo] = useState(0);
+   const [elevationBounds, setElevationBounds] = useState();
    const {isLoading:isMeshLoading, data:meshData} = useFetchResource({url});
    useEffect(() => {
       if(!meshData)
          return;
       console.log('mesh number:', meshData.features.length);
       setMeshNo(meshData.features.length);
-      let activeFeatures = activeMeshCells(meshData.features);
-         setMeshActiveNo(activeFeatures.length);
+      let {activeFeatures, elevationBounds:eb} = activeMeshCells(meshData.features);
+      setMeshActiveNo(activeFeatures.length);
+      setElevationBounds(eb);
       if(activeCellOnly)
       {
          setMesh(activeFeatures);
@@ -25,5 +27,5 @@ export default function(props) {
          setMesh(meshData.features);
 
    }, [meshData, activeCellOnly]);
-   return {isMeshLoading, mesh, meshNo, meshActiveNo};
+   return {isMeshLoading, mesh, meshNo, meshActiveNo, elevationBounds};
 }

@@ -9,10 +9,12 @@ import useSetBBox from './useSetBBox';
 import useSetupBaselayers from './useSetupBaselayers';
 import useLoadingMeshData from './useLoadMeshData';
 import useSetup2dviewLayers from './useSetup2dviewLayers';
+import useSetupContourLayers from './useSetupContourlayers';
 import useSetup3dvolumeLayers from './useSetup3dvolumeLayers';
 import useSetup3dsurfaceLayers from './useSetup3dsurfaceLayers';
 
 import SettingsPanel from './settingsPanel';
+import ContourLegend from './contourLegend';
 
 //responsive canavs size using custom hook useDimensions
 export default props => {
@@ -60,17 +62,23 @@ export default props => {
   //setup control panel
   //view parameters settings
   const defaultParams = {
-    view:1, //show 2d or 3d surface view or 3d volume
+    view:0, //show 2d or 3d surface view or 3d volume
     activeCellOnly:true,
     basemapVisible:false,
     zScale:10,
+    //surface
     borderFaceVisible:true,
     meshTopVisible:true,
-    meshBottomVisible:true
+    meshBottomVisible:false,
+    //contour
+    isTop:true, //ture
+    isIsoband:false, //true
+    contourVisible:false,
+    contourCount:3
   }
   const [params, setParams] = useState(defaultParams);
   //loading mesh data
-  const {isMeshLoading, mesh, meshNo, meshActiveNo} = useLoadingMeshData({activeCellOnly:params.activeCellOnly, url:'resources/3dmesh.geojson'});
+  const {isMeshLoading, mesh, meshNo, meshActiveNo, elevationBounds} = useLoadingMeshData({activeCellOnly:params.activeCellOnly, url:'resources/3dmesh.geojson'});
 
 
   const deckgl = useRef();
@@ -85,6 +93,9 @@ export default props => {
   //2d view layers
   const {v2dLayers} = useSetup2dviewLayers({params, mesh});
 
+  //2d contour layers
+  const {contourLayers, contours} = useSetupContourLayers({params, mesh, elevationBounds});
+  
   //set layers for 3d volume
   const {v3dVolumeLayers} = useSetup3dvolumeLayers({params, mesh});
   
@@ -96,7 +107,7 @@ export default props => {
         setLayers([...baseLayers, ...v3dSurfaceLayers ]);
         break;
       case 0: //2d 
-        setLayers([...baseLayers, ...v2dLayers ]);
+        setLayers([...baseLayers, ...v2dLayers, ...contourLayers ]);
         break;
       case 2: // 3d volume
         setLayers([...baseLayers, ...v3dVolumeLayers ]);
@@ -104,7 +115,7 @@ export default props => {
       default:
         setLayers([]);
     }
-  }, [params.view, baseLayers, v2dLayers, v3dVolumeLayers, v3dSurfaceLayers])
+  }, [params.view, baseLayers, v2dLayers, contourLayers, v3dVolumeLayers, v3dSurfaceLayers])
   
   //create different views 2d, or 3d
   const views2d = new OrthographicView({ id: "2d-scene" });
@@ -133,7 +144,7 @@ export default props => {
     <div>GPU Mem:{(metrics.gpuMemory/1024/1024).toFixed(1)}M</div> 
     <div>{(isBorderLoading || isMeshLoading)? 'Loading data...':''}</div>
       <div id="maps" ref={ref}>
-      
+      <ContourLegend contours={contours}/>
         <DeckGL
           //views={}
           ref={deckgl}

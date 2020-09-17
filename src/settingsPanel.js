@@ -49,13 +49,37 @@ export default (props)=>{
          setParams((preParams) => ({...preParams, borderFaceVisible:value}));
 
        });
-      const folder = panel.addFolder({ title: "base map" });
-      folder
+      const basmap = panel.addFolder({ title: "base map" });
+      basmap
       .addInput({ visible: defaultParams.basemapVisible }, "visible", { label: "Visible" })
       .on("change", value => {
         setParams((preParams) => ({...preParams, basemapVisible:value}));
         //console.log(value);
       });
+      //contour settings
+      
+    const contour = panel.addFolder({ title: "contour" });
+    contour
+      .addInput({ visible: defaultParams.contourVisible }, "visible", { label: "Visible" })
+      .on("change", value => {
+         setParams((preParams) => ({...preParams, contourVisible:value}));
+   });
+      contour
+      .addInput({ isTop: defaultParams.isTop }, "isTop", { label: "top/bottom", options:{top:true, bottom:false} })
+      .on("change", value => {
+         setParams((preParams) => ({...preParams, isTop:value}));
+      });
+      contour
+      .addInput({ isIsoband: defaultParams.isIsoband }, "isIsoband", { label: "Iso-line/band", options:{isoline:false, isoband:true} })
+      .on("change", value => {
+         setParams((preParams) => ({...preParams, isIsoband:value}));
+      });
+      contour
+      .addInput({ contourCount: defaultParams.contourCount }, "contourCount", { label: "contour count", step:1, min:3, max:10 })
+      .on("change", value => {
+         setParams((preParams) => ({...preParams, contourCount:value}));
+      });
+
       panel.expanded =false;
       return function(){
          panel.dispose();
